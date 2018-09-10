@@ -347,8 +347,8 @@ def program():
     # return
 
     # separate evolution by stations
-    Data.clearData()
-    Log.clear()
+    # Data.clearData()
+    # Log.clear()
     # for forcingId in range(0, len(Consts.State.forcingType)):
     Consts.State.forcingId = 0  # ncep is first in co-ensemble
     for periodId in range(0, (Consts.Models.Observations.timePeriodsCount)):
@@ -357,7 +357,7 @@ def program():
         # Consts.State.expId = "coevExp_time"+str(periodId)
         Consts.State.expId = "coevExp_full"
         coindividuals = []
-        Log.write('Start optimization')
+        # Log.write('Start optimization')
         Supply.ModelDate.numOfPopulation = 1
         coindividuals = lifeCycle(coindividuals)
 

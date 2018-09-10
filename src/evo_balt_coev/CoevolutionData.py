@@ -163,7 +163,7 @@ def truncateFront(front, coindividuals):  # returns front which size is minimum 
 
 
 def preprocess(coindividuals):
-    Log.write('Preprocess')
+    # Log.write('Preprocess')
     modelDate = (SwanFunctions.readSwanConfig(Consts.Models.SWAN.pathToConfig(), 'COMPUTE',
                                               [2]))  # discover model date written in config.ini
 

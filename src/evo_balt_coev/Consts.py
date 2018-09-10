@@ -1,6 +1,6 @@
 class Debug(object):
     debugDragFunc = 0.05
-    debugMode = False
+    debugMode = True
     runModel = True and not debugMode
 
 
