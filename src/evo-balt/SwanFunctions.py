@@ -1,14 +1,15 @@
-import numpy as np
 import fileinput
-import Consts
-import subprocess, os, calendar, shutil
-import Log
+import os
+import subprocess
 import time
-from datetime import datetime, timedelta
-import ConfigParser
 
-def readSwanConfig(fileName, option,argNums):
+import numpy as np
 
+import Consts
+import Log
+
+
+def readSwanConfig(fileName, option, argNums):
     valueString = ""
     file = open(fileName, "r")
     text = file.read()
@@ -20,7 +21,8 @@ def readSwanConfig(fileName, option,argNums):
         result = linesParts[argNums]
         if (len(argNums) == 1):
             return result[0]
-        else: return result
+        else:
+            return result
     '''
     if (type=="option"):
         m = re.search(option+'=(.+?)\n',text)
@@ -35,11 +37,11 @@ def readSwanConfig(fileName, option,argNums):
     return valueString
 
 
-def writeSwanConfig(fileName, option,argNums, value):
-    #f = fileinput.input(fileName, inplace=1, backup='.bak'  )
+def writeSwanConfig(fileName, option, argNums, value):
+    # f = fileinput.input(fileName, inplace=1, backup='.bak'  )
     time.sleep(1.0)
     Log.write("Start write to confg")
-    for line in fileinput.input(fileName, inplace=1, backup='.bak'  ):
+    for line in fileinput.input(fileName, inplace=1, backup='.bak'):
         newLine = line
         if (option in line):
             linesParts = np.asarray(line.split())
@@ -49,13 +51,14 @@ def writeSwanConfig(fileName, option,argNums, value):
             else:
                 argInd = 0
                 for argNum in argNums:
-                    #forReplace = linesParts)[argNum]
-                    #line=line.replace(forReplace, list(reversed(value))[argInd])
-                    linesParts[argNum]  = value[argInd]
-                    line=" ".join(linesParts)
-                    argInd+=1
+                    # forReplace = linesParts)[argNum]
+                    # line=line.replace(forReplace, list(reversed(value))[argInd])
+                    linesParts[argNum] = value[argInd]
+                    line = " ".join(linesParts)
+                    argInd += 1
                 line += "\n"
-        print line,
+        print
+        line,
 
 
 def runSwanBatFile():
@@ -63,8 +66,6 @@ def runSwanBatFile():
         savedWorkDir = os.getcwd()
         os.chdir(Consts.Models.SWAN.pathToFolder)
 
-
         p = subprocess.Popen(Consts.Models.SWAN.pathToExec())
         os.chdir(savedWorkDir)
         p.wait()
-
