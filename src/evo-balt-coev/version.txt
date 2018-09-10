@@ -1,0 +1,6 @@
+version 3.0 - Each data source has its own computer(/branch/rank) to evolve. For default we have considered HIRLAM and GFS.
+When solutions are converged to some value, then after barrier function a part of coevolution takes a place
+BUT ONLY for describing purpose , we do NOT ust this as selection, as in versions 3.1 and 3.2
+
+Give new settings for model.
+Start evolution procedure in the same way as at the begining.
