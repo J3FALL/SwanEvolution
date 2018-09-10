@@ -1,3 +1,8 @@
+import copy
+import math
+import random as rnd
+import time
+
 import numpy as np
 
 import Consts
@@ -5,10 +10,6 @@ import Data
 import Log
 import Supply
 import SwanFunctions
-import copy
-import math
-import random as rnd
-import time
 
 
 def calculateErrors(station, point, station_obs, point_obs):
@@ -378,7 +379,6 @@ def stepping():
     Consts.State.forcingId = 0
     Consts.State.currentPeriodId = 0
     Consts.State.separateStationsMode = False
-    #    Consts.State.time
     Consts.State.expId = "gridexp_" + str(0) + "_" + str(Consts.State.forcingType[Consts.State.forcingId]) + "_full"
 
     for i in range(5, 40):
@@ -388,30 +388,6 @@ def stepping():
                 wcr = wcr_def * pow(10, j) * k * 2.5
                 ws = 0.00302
                 runModel((dragFunc, physType, wcr, ws), "")  # run model and returns individual
-
-    # runModel((drag_def, physType, wcr_def, ws_def),"")
-
-    # return
-    # Consts.State.forcingId = 0
-
-
-# Consts.State.currentPeriodId = 4
-# Consts.State.expId = "regularExp"+str(0)+"_"+str(Consts.State.forcingType[0])+"_"+str(0+1)
-
-# for i in range(1, 20):
-#    dragFunc = drag_def * i/10
-#    for j in range(1, 32000,400):
-#            wcr = wcr_def / 400 * j
-#            ws = ws_def
-#            runModel((dragFunc, physType, wcr, ws), "")  # run model and returns individual
-
-# for i in range(1, 80):
-#    dragFunc = drag_def * i / 10
-#    for j in range(-5, 5, 1):
-#        for k in range(1, 4):
-#           wcr = wcr_def * pow(10, j) * k * 2.5
-#            ws = 0.00302
-#            runModel((dragFunc, physType, wcr, ws), "")  # run model and returns individual
 
 
 def program():
