@@ -16,6 +16,7 @@ class ModelDate:
 
 
 from src.evo_balt.files import ObservationFile
+from src.evo_balt.files import ForecastFile
 
 
 def getDate(y, m, d, h, delimiter):
@@ -33,8 +34,9 @@ def getForecast(station, colNum):
         return [(random.random() * 5)] * 1000
 
     pathEst = Consts.Models.SWAN.pathToResults + station
-    file = open(pathEst, 'r')
-    content = [x for x in file.readlines() if x[0] != "%"]
+
+    forecast = ForecastFile(path=pathEst)
+    content = forecast.time_series()
 
     return [float(line.split()[colNum]) for line in content]
 
