@@ -15,6 +15,9 @@ class ModelDate:
     numOfPopulation = 1
 
 
+from src.evo_balt.files import ObservationFile
+
+
 def getDate(y, m, d, h, delimiter):
     s = '{0:02d}{1:02d}{2:02d}{3:02d}'.format(y, m, d, h)  # str(y) + str(m) + str(d) + str(h) #'2013102000'
     if delimiter == 0:
@@ -39,19 +42,13 @@ def getForecast(station, colNum):
 def getObservation(station, colNum):  # returnable value's length is equal to meteoForecastTime + 1 !!!
 
     pathObs = Consts.Models.Observations.pathToFolder + station
-    file = open(pathObs, 'r')
-    content = [x for x in file.readlines() if ((x[0] != "#") and (x[0] != "<"))]
 
-    startItem = [x for x in content if ((datetime.strptime((" ".join([x.split()[1], x.split()[2]])),
-                                                           "%d-%m-%Y %H:%M:%S").strftime("%Y%m%d.%H") + "0000") ==
-                                        Consts.Models.Observations.timePeriodsStartTimes[
-                                            Consts.State.currentPeriodId])][0]
-    startId = content.index(startItem)
-    endLineId = [x for x in content if ((datetime.strptime((" ".join([x.split()[1], x.split()[2]])),
-                                                           "%d-%m-%Y %H:%M:%S").strftime("%Y%m%d.%H") + "0000") ==
-                                        Consts.Models.Observations.timePeriodEndTimes[Consts.State.currentPeriodId])][0]
-    endId = content.index(endLineId)
-    return [float(content[i].split()[colNum]) for i in range(startId, endId + 1)]
+    obs_file = ObservationFile(path=pathObs)
+    content = obs_file.time_series(
+        from_date=Consts.Models.Observations.timePeriodsStartTimes[Consts.State.currentPeriodId],
+        to_date=Consts.Models.Observations.timePeriodEndTimes[Consts.State.currentPeriodId])
+
+    return [float(line.split()[colNum]) for line in content]
 
 
 def parseDate(modelDate):  # 2013-10-20T12-00-00

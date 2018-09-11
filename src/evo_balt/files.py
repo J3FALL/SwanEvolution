@@ -46,5 +46,3 @@ class FormattedDate:
 obs = ObservationFile("../../samples/obs/1a_waves.txt")
 ts = obs.time_series(from_date=Consts.Models.Observations.timePeriodsStartTimes[Consts.State.currentPeriodId],
                      to_date=Consts.Models.Observations.timePeriodEndTimes[Consts.State.currentPeriodId])
-
-print(len(ts))
