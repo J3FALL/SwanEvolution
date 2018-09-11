@@ -30,6 +30,19 @@ class ObservationFile:
         return idx_from, idx_to
 
 
+class ForecastFile:
+    def __init__(self, path):
+        self.path = path
+
+    def time_series(self):
+        with open(self.path) as file:
+            lines = self._skip_meta_info(file.readlines())
+            return lines
+
+    def _skip_meta_info(self, lines):
+        return list(filter(lambda line: line if not line.startswith("%") else None, lines))
+
+
 class FormattedDate:
     def __init__(self):
         self._source_date_pattern = "%d-%m-%Y %H:%M:%S"
