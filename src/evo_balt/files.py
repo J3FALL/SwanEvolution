@@ -1,7 +1,5 @@
 from datetime import datetime
 
-from src.evo_balt import Consts
-
 
 class ObservationFile:
     def __init__(self, path):
@@ -41,8 +39,3 @@ class FormattedDate:
     def target(self, date, time):
         return datetime.strptime(" ".join([date, time]), self._source_date_pattern).strftime(
             self._target_date_pattern) + self._target_suffix
-
-
-obs = ObservationFile("../../samples/obs/1a_waves.txt")
-ts = obs.time_series(from_date=Consts.Models.Observations.timePeriodsStartTimes[Consts.State.currentPeriodId],
-                     to_date=Consts.Models.Observations.timePeriodEndTimes[Consts.State.currentPeriodId])
