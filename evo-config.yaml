@@ -1,0 +1,13 @@
+grid:
+  drag:
+    min: 1.0
+    max: 2.0
+    delta: 0.01
+  wcr:
+    min: 1.0
+    max: 2.0
+    delta: 0.01
+  ws:
+    min: 1.0
+    max: 2.0
+    delta: 0.01
