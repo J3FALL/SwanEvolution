@@ -1,4 +1,7 @@
-from enum import Enum
+import os
+from enum import IntEnum
+
+import yaml
 
 
 class SWANIndivid:
@@ -17,9 +20,21 @@ class SWANIndivid:
         self.ws = ws
 
 
-class PhysicsType(Enum):
+class PhysicsType(IntEnum):
     GEN1 = 1
     GEN3 = 2
+
+
+class EvoConfig:
+    def __init__(self):
+        self.content = self._load()
+
+    def _load(self):
+        with open(os.path.join(os.path.dirname(__file__), "../../evo-config.yaml"), 'r') as stream:
+            return yaml.load(stream)
+
+    def grid_by_name(self, name):
+        return self.content['grid'][name]
 
 
 class Evolution:
