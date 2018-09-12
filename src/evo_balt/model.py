@@ -1,8 +1,6 @@
 import numpy as np
 
-from src.evo_balt.evo import EvoConfig
 from src.evo_balt.evo import PhysicsType
-from src.evo_balt.evo import SWANIndivid
 
 
 class FakeModel:
@@ -49,5 +47,28 @@ class FakeModel:
         return self.grid[drag_idx, physics_idx, wcr_idx, ws_idx]
 
 
-fake = FakeModel(config=EvoConfig())
-print(fake.output(params=SWANIndivid(1.505, PhysicsType.GEN3, 1.505, 1.505)))
+class GridFile:
+    '''
+    Class that loads results of multiple SWAN simulations from CSV-file
+    and construct grid of parameters
+    '''
+
+    def __init__(self, path):
+        '''
+
+        :param path: path to CSV-file
+        '''
+        self.path = path
+        self._load()
+
+    def _load(self):
+        import csv
+        with open(self.path, newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                print(row['ID'])
+
+
+grid = GridFile(path="../../samples/fixed.csv")
+# fake = FakeModel(config=EvoConfig())
+# print(fake.output(params=SWANIndivid(1.505, PhysicsType.GEN3, 1.505, 1.505)))
