@@ -4,7 +4,7 @@ from enum import IntEnum
 import yaml
 
 
-class SWANIndivid:
+class SWANParams:
     def __init__(self, drag_func, physics_type, wcr, ws):
         '''
         Represents parameters of SWAN model that will be evolve
