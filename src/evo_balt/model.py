@@ -1,3 +1,5 @@
+from ast import literal_eval
+
 import numpy as np
 
 from src.evo_balt.evo import PhysicsType
@@ -65,8 +67,19 @@ class GridFile:
         import csv
         with open(self.path, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
-            for row in reader:
-                print(row['ID'])
+
+            grid_rows = [GridRow(row) for row in reader]
+            print(grid_rows)
+
+
+class GridRow:
+    def __init__(self, row):
+        self.id = row['ID']
+        self.pop = row['Pop']
+        self.error_distance = row['finErrorDist']
+        self.model_params = literal_eval(row['params'])
+        self.errors = literal_eval(row['errors'])
+        self.forecasts = literal_eval(row['forecasts'])
 
 
 grid = GridFile(path="../../samples/fixed.csv")
