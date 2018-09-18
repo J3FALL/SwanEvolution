@@ -1,6 +1,7 @@
 import os
 from enum import IntEnum
 from math import sqrt
+from operator import itemgetter
 
 import yaml
 
@@ -87,6 +88,7 @@ class SPEA2:
         gen = 0
         while True:
             self.fitness()
+            self._archive = self.environmental_selection(self._pop, self._archive)
             if gen >= self.max_gens:
                 break
 
@@ -165,6 +167,40 @@ class SPEA2:
             sum += pow(p1[idx] - p2[idx], 2)
 
         return sqrt(sum)
+
+    def environmental_selection(self, pop, archive):
+        union = archive + pop
+        env = [p for p in union if p.fitness() < 1.0]
+
+        if len(env) < self.archive_size:
+            # Fill the archive with the remaining candidate solutions
+            union.sort(key=lambda p: p.fitness())
+            for p in union:
+                if len(env) >= self.archive_size:
+                    break
+                if p.fitness() >= 1.0:
+                    env.append(p)
+        elif len(env) > self.archive_size:
+            while True:
+                # Truncate the archive population
+                k = int(sqrt(len(env)))
+
+                dens = []
+                for p1 in env:
+                    distances_to_p1 = []
+                    for p2 in env:
+                        distances_to_p1.append(self.euclidean_distance(p1.objectives, p2.objectives))
+                    distances_to_p1 = sorted(distances_to_p1)
+                    density = 1.0 / (distances_to_p1[k])
+                    dens.append((p1, density))
+                print("!")
+                dens.sort(key=itemgetter(1))
+                to_remove = dens[0][0]
+                env.remove(to_remove)
+
+                if len(env) <= self.archive_size:
+                    break
+        return env
 
 
 print(SPEA2(10, 10, 10, 0.5).solution())
