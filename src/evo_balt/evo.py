@@ -55,3 +55,36 @@ class Evolution:
 
     def crossover(self):
         raise NotImplementedError
+
+
+class SPEA2:
+    def __init__(self, max_gens, pop_size, archive_size, crossover_rate):
+        self.max_gens = max_gens
+        self.pop_size = pop_size
+        self.archive_size = archive_size
+        self.crossover_rate = crossover_rate
+
+        self._init_populations()
+
+    def _init_populations(self):
+        # TODO: init from SWANParamsFactory or smth
+        self._pop = [SWANParams(1, PhysicsType.GEN3, 1, 1) for _ in range(self.pop_size)]
+        self._archive = []
+
+    def solution(self):
+        gen = 0
+        while True:
+            # update pop, archive
+
+            if gen >= self.max_gens:
+                break
+
+            # selection
+            # mutate, crossover
+
+            gen += 1
+
+        return self._archive
+
+
+print(SPEA2(10, 10, 10, 0.5).solution())
