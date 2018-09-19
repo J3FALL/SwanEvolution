@@ -25,8 +25,8 @@ class SWANParams:
 
 
 class PhysicsType(IntEnum):
-    GEN1 = 1
-    GEN3 = 2
+    GEN1 = 0
+    GEN3 = 1
 
 
 class EvoConfig:
@@ -39,26 +39,6 @@ class EvoConfig:
 
     def grid_by_name(self, name):
         return self.content['grid'][name]
-
-
-class Evolution:
-    def __init__(self):
-        self.population = []
-
-    def run(self):
-        raise NotImplementedError
-
-    def fitness(self):
-        raise NotImplementedError
-
-    def selection(self):
-        raise NotImplementedError
-
-    def mutation(self):
-        raise NotImplementedError
-
-    def crossover(self):
-        raise NotImplementedError
 
 
 class SPEA2:
@@ -95,17 +75,22 @@ class SPEA2:
 
     def solution(self):
         gen = 0
+        best_all = pow(10, 9)
         while True:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
             best = sorted(self._archive, key=lambda p: p.fitness())[0]
-            print("best: ", best.objectives, best.fitness())
+
+            if best.fitness() < best_all:
+                best_all = best.fitness()
+                best_gens = best.genotype
+                print("new best: ", best_gens, best.fitness(), best.objectives)
+                print(gen)
             if gen >= self.max_gens:
                 break
 
             selected = self.selected(self.pop_size, self._archive)
-            # mutate, crossover
-            self._pop = self.reproduce(selected, self.pop_size, self.crossover_rate)
+            self._pop = self.reproduce(selected, self.pop_size)
 
             gen += 1
 
@@ -133,8 +118,8 @@ class SPEA2:
 
         for p in pop:
             # p.objectives = (p.genotype.drag_func - 0.5, p.genotype.drag_func - 0.3)
-            obj1 = pow(p.genotype[0], 2)
-            obj2 = pow(p.genotype[0] - 2, 2)
+            obj1 = pow(p.genotype[0], 2) + pow(p.genotype[1], 2)
+            obj2 = pow(p.genotype[0] - 2, 2) + pow(p.genotype[1] - 2, 2)
             p.objectives = (obj1, obj2)
 
     def calculate_dominated(self, pop):
@@ -232,7 +217,7 @@ class SPEA2:
 
         return pop[i] if pop[i].fitness() < pop[j].fitness() else pop[j]
 
-    def reproduce(self, selected, pop_size, crossover_rate):
+    def reproduce(self, selected, pop_size):
         children = []
 
         for p1 in selected:
@@ -268,4 +253,4 @@ class SPEA2:
         return individ
 
 
-print(SPEA2(1000, 50, 30, 0.9).solution())
+# print(SPEA2(1000, 50, 30, 0.9).solution())
