@@ -1,4 +1,6 @@
 import os
+import random
+from datetime import datetime
 from enum import IntEnum
 from math import sqrt
 from operator import itemgetter
@@ -70,7 +72,11 @@ class SPEA2:
 
     def _init_populations(self):
         # TODO: init from SWANParamsFactory or smth
-        self._pop = [SPEA2.Individ(SWANParams(1, PhysicsType.GEN3, 1, 1)) for _ in range(self.pop_size)]
+        # self._pop = [SPEA2.Individ(SWANParams(1, PhysicsType.GEN3, 1, 1)) for _ in range(self.pop_size)]
+        random.seed(datetime.now())
+        self._pop = []
+        for _ in range(self.pop_size):
+            self._pop.append(SPEA2.Individ(genotype=[random.randint(-10, 10), random.randint(-10, 10)]))
         self._archive = []
 
     class Individ:
@@ -84,16 +90,22 @@ class SPEA2:
         def fitness(self):
             return self.raw_fitness + self.density
 
+        def weighted_sum(self):
+            return self.objectives[0] + self.objectives[1]
+
     def solution(self):
         gen = 0
         while True:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
+            best = sorted(self._archive, key=lambda p: p.fitness())[0]
+            print("best: ", best.objectives, best.fitness())
             if gen >= self.max_gens:
                 break
 
-            # selection
+            selected = self.selected(self.pop_size, self._archive)
             # mutate, crossover
+            self._pop = self.reproduce(selected, self.pop_size, self.crossover_rate)
 
             gen += 1
 
@@ -107,7 +119,7 @@ class SPEA2:
         for p in self._pop:
             p.raw_fitness = self.calculate_raw_fitness(p, union)
             p.density = self.calculate_density(p, union)
-            print(p.fitness())
+            # print(p.fitness())
 
     def calculate_objectives(self, pop):
         '''
@@ -121,7 +133,9 @@ class SPEA2:
 
         for p in pop:
             # p.objectives = (p.genotype.drag_func - 0.5, p.genotype.drag_func - 0.3)
-            p.objectives = (pop.index(p), pop.index(p))
+            obj1 = pow(p.genotype[0], 2)
+            obj2 = pow(p.genotype[0] - 2, 2)
+            p.objectives = (obj1, obj2)
 
     def calculate_dominated(self, pop):
         '''
@@ -191,9 +205,8 @@ class SPEA2:
                     for p2 in env:
                         distances_to_p1.append(self.euclidean_distance(p1.objectives, p2.objectives))
                     distances_to_p1 = sorted(distances_to_p1)
-                    density = 1.0 / (distances_to_p1[k])
+                    density = 1.0 / (distances_to_p1[k] + 2.0)
                     dens.append((p1, density))
-                print("!")
                 dens.sort(key=itemgetter(1))
                 to_remove = dens[0][0]
                 env.remove(to_remove)
@@ -202,5 +215,57 @@ class SPEA2:
                     break
         return env
 
+    def selected(self, size, pop):
+        selected = []
+        while len(selected) < size:
+            selected.append(self.binary_tournament(pop))
 
-print(SPEA2(10, 10, 10, 0.5).solution())
+        return selected
+
+    def binary_tournament(self, pop):
+        random.seed(datetime.now())
+
+        i, j = random.randint(0, len(pop) - 1), random.randint(0, len(pop) - 1)
+
+        while j == i:
+            j = random.randint(0, len(pop) - 1)
+
+        return pop[i] if pop[i].fitness() < pop[j].fitness() else pop[j]
+
+    def reproduce(self, selected, pop_size, crossover_rate):
+        children = []
+
+        for p1 in selected:
+            idx = selected.index(p1)
+            p2 = selected[idx + 1] if idx % 2 == 0 else selected[idx - 1]
+            if idx == len(selected) - 1:
+                p2 = selected[0]
+
+            child = self.crossover(p1, p2, self.crossover_rate)
+            child = self.mutation(child)
+            children.append(child)
+
+            if len(children) >= pop_size:
+                break
+
+        return children
+
+    def crossover(self, p1, p2, rate):
+        # TODO: crossover swan params
+        if random.random() >= rate:
+            return p1
+
+        child = SPEA2.Individ(genotype=[p1.genotype[0], p2.genotype[1]])
+        return child
+
+    def mutation(self, individ):
+        # TODO: mutation swan params
+        for idx in range(len(individ.genotype)):
+            if random.random() > 0.5:
+                sign = 1 if random.random() < 0.5 else -1
+                individ.genotype[idx] += sign * 0.1
+
+        return individ
+
+
+print(SPEA2(1000, 50, 30, 0.9).solution())
