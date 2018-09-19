@@ -45,6 +45,14 @@ class FakeModel:
 
         return drag_idx, physics_idx, wcr_idx, ws_idx
 
+    def closest_params(self, params):
+        drag = min(self.grid_file.drag_grid, key=lambda val: abs(val - params.drag_func))
+        physics = (list(PhysicsType)).index(params.physics_type)
+        wcr = min(self.grid_file.wcr_grid, key=lambda val: abs(val - params.wcr))
+        ws = min(self.grid_file.ws_grid, key=lambda val: abs(val - params.ws))
+
+        return drag, physics, wcr, ws
+
     def output(self, params):
         '''
 
@@ -128,4 +136,6 @@ class GridRow:
 
 grid = GridFile(path="../../samples/grid_full.csv")
 fake = FakeModel(grid_file=grid)
-print(fake.output(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.4425, ws=0.00302)))
+
+print(fake.params_idxs(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.4425, ws=0.00302)))
+print(fake.closest_params(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.7, ws=0.00302)))
