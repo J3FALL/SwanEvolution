@@ -133,9 +133,8 @@ class GridRow:
         return SWANParams(drag_func=params_tuple[0], physics_type=params_tuple[1],
                           wcr=params_tuple[2], ws=params_tuple[3])
 
+# grid = GridFile(path="../../samples/grid_full.csv")
+# fake = FakeModel(grid_file=grid)
 
-grid = GridFile(path="../../samples/grid_full.csv")
-fake = FakeModel(grid_file=grid)
-
-print(fake.params_idxs(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.4425, ws=0.00302)))
-print(fake.closest_params(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.7, ws=0.00302)))
+# print(fake.params_idxs(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.4425, ws=0.00302)))
+# print(fake.closest_params(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.7, ws=0.00302)))
