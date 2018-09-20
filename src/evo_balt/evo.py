@@ -7,8 +7,15 @@ from operator import itemgetter
 
 import yaml
 
+random.seed(datetime.now())
+
 
 class SWANParams:
+    @staticmethod
+    def new_instance():
+        return SWANParams(drag_func=random.uniform(0, 5), physics_type=PhysicsType.GEN3,
+                          wcr=random.uniform(pow(10, -10), 2), ws=0.00302)
+
     def __init__(self, drag_func, physics_type, wcr, ws):
         '''
         Represents parameters of SWAN model that will be evolve
@@ -51,12 +58,8 @@ class SPEA2:
         self._init_populations()
 
     def _init_populations(self):
-        # TODO: init from SWANParamsFactory or smth
-        # self._pop = [SPEA2.Individ(SWANParams(1, PhysicsType.GEN3, 1, 1)) for _ in range(self.pop_size)]
-        random.seed(datetime.now())
-        self._pop = []
-        for _ in range(self.pop_size):
-            self._pop.append(SPEA2.Individ(genotype=[random.randint(-10, 10), random.randint(-10, 10)]))
+        # self._pop = [SPEA2.Individ(genotype=SWANParams.new_instance()) for _ in range(self.pop_size)]
+        self._pop = basic_population(self.pop_size)
         self._archive = []
 
     class Individ:
@@ -251,6 +254,11 @@ class SPEA2:
                 individ.genotype[idx] += sign * 0.1
 
         return individ
+
+
+def basic_population(pop_size):
+    random.seed(datetime.now())
+    return [SPEA2.Individ(genotype=[random.randint(-10, 10), random.randint(-10, 10)]) for _ in range(pop_size)]
 
 
 # print(SPEA2(1000, 50, 30, 0.9).solution())
