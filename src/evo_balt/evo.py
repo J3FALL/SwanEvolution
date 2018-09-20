@@ -1,39 +1,16 @@
 import os
 import random
 from datetime import datetime
-from enum import IntEnum
 from math import sqrt
 from operator import itemgetter
 
 import yaml
 
+from src.evo_balt.model import FakeModel
+from src.evo_balt.model import GridFile
+from src.evo_balt.model import SWANParams
+
 random.seed(datetime.now())
-
-
-class SWANParams:
-    @staticmethod
-    def new_instance():
-        return SWANParams(drag_func=random.uniform(0, 5), physics_type=PhysicsType.GEN3,
-                          wcr=random.uniform(pow(10, -10), 2), ws=0.00302)
-
-    def __init__(self, drag_func, physics_type, wcr, ws):
-        '''
-        Represents parameters of SWAN model that will be evolve
-        :param drag_func:
-        :param physics_type: GEN1, GEN3 - enum ?
-        :param wcr: WhiteCappingRate
-        :param ws: Wave steepness
-        '''
-
-        self.drag_func = drag_func
-        self.physics_type = physics_type
-        self.wcr = wcr
-        self.ws = ws
-
-
-class PhysicsType(IntEnum):
-    GEN1 = 0
-    GEN3 = 1
 
 
 class EvoConfig:
@@ -57,9 +34,11 @@ class SPEA2:
 
         self._init_populations()
 
+        self.model = FakeModel(grid_file=GridFile(path="../../samples/grid_full.csv"))
+
     def _init_populations(self):
-        # self._pop = [SPEA2.Individ(genotype=SWANParams.new_instance()) for _ in range(self.pop_size)]
-        self._pop = basic_population(self.pop_size)
+        self._pop = [SPEA2.Individ(genotype=SWANParams.new_instance()) for _ in range(self.pop_size)]
+        # self._pop = basic_population(self.pop_size)
         self._archive = []
 
     class Individ:
@@ -74,12 +53,12 @@ class SPEA2:
             return self.raw_fitness + self.density
 
         def weighted_sum(self):
-            return self.objectives[0] + self.objectives[1]
+            return self.objectives[0] + self.objectives[1] + self.objectives[2]
 
     def solution(self):
         gen = 0
         best_all = pow(10, 9)
-        while True:
+        while gen < self.max_gens:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
             best = sorted(self._archive, key=lambda p: p.fitness())[0]
@@ -87,10 +66,11 @@ class SPEA2:
             if best.fitness() < best_all:
                 best_all = best.fitness()
                 best_gens = best.genotype
-                print("new best: ", best_gens, best.fitness(), best.objectives)
+                print("new best: ", best_gens, best.fitness(), best.objectives,
+                      sqrt(pow(best.objectives[0], 2) + pow(best.objectives[1], 2) + pow(best.objectives[2], 2)))
                 print(gen)
-            if gen >= self.max_gens:
-                break
+                # if gen >= self.max_gens:
+                #     break
 
             selected = self.selected(self.pop_size, self._archive)
             self._pop = self.reproduce(selected, self.pop_size)
@@ -107,7 +87,6 @@ class SPEA2:
         for p in self._pop:
             p.raw_fitness = self.calculate_raw_fitness(p, union)
             p.density = self.calculate_density(p, union)
-            # print(p.fitness())
 
     def calculate_objectives(self, pop):
         '''
@@ -120,10 +99,13 @@ class SPEA2:
         # Calculate errors
 
         for p in pop:
-            # p.objectives = (p.genotype.drag_func - 0.5, p.genotype.drag_func - 0.3)
-            obj1 = pow(p.genotype[0], 2) + pow(p.genotype[1], 2)
-            obj2 = pow(p.genotype[0] - 2, 2) + pow(p.genotype[1] - 2, 2)
-            p.objectives = (obj1, obj2)
+            params = p.genotype
+            closest = self.model.closest_params(params)
+            params.update(drag_func=closest[0], physics_type=closest[1], wcr=closest[2], ws=closest[3])
+            obj_station1, obj_station2, obj_station3 = self.model.output(params=params)
+            p.objectives = (obj_station1, obj_station2, obj_station3)
+            print(p.objectives, sqrt(pow(p.objectives[0], 2) + pow(p.objectives[1], 2) + pow(p.objectives[2], 2)))
+        # basic_objectives(pop)
 
     def calculate_dominated(self, pop):
         '''
@@ -239,20 +221,24 @@ class SPEA2:
         return children
 
     def crossover(self, p1, p2, rate):
-        # TODO: crossover swan params
         if random.random() >= rate:
             return p1
 
-        child = SPEA2.Individ(genotype=[p1.genotype[0], p2.genotype[1]])
+        child_params = SWANParams(drag_func=p1.genotype.drag_func, physics_type=p1.genotype.physics_type,
+                                  wcr=p2.genotype.wcr, ws=p2.genotype.ws)
+        child = SPEA2.Individ(genotype=child_params)
         return child
 
     def mutation(self, individ):
-        # TODO: mutation swan params
-        for idx in range(len(individ.genotype)):
-            if random.random() > 0.5:
-                sign = 1 if random.random() < 0.5 else -1
-                individ.genotype[idx] += sign * 0.1
+        params = ['drag_func', 'wcr']
+        if random.random() > 0.5:
+            param_to_mutate = params[random.randint(0, 1)]
 
+            sign = 1 if random.random() < 0.5 else -1
+            if param_to_mutate is 'drag_func':
+                individ.genotype.drag_func += sign * 0.05
+            if param_to_mutate is 'wcr':
+                individ.genotype.drag_func += sign * (individ.genotype.drag_func * 5)
         return individ
 
 
@@ -261,4 +247,23 @@ def basic_population(pop_size):
     return [SPEA2.Individ(genotype=[random.randint(-10, 10), random.randint(-10, 10)]) for _ in range(pop_size)]
 
 
+def basic_objectives(pop):
+    for p in pop:
+        obj1 = pow(p.genotype[0], 2) + pow(p.genotype[1], 2)
+        obj2 = pow(p.genotype[0] - 2, 2) + pow(p.genotype[1] - 2, 2)
+        p.objectives = (obj1, obj2)
+
+
+def basic_mutation(individ):
+    for idx in range(len(individ.genotype)):
+        if random.random() > 0.5:
+            sign = 1 if random.random() < 0.5 else -1
+            individ.genotype[idx] += sign * 0.1
+
+    return individ
+
+
 # print(SPEA2(1000, 50, 30, 0.9).solution())
+
+evol = SPEA2(200, 50, 30, 0.9)
+print("result:", evol.solution())

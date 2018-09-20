@@ -1,12 +1,43 @@
+import random
 from ast import literal_eval
 from collections import Counter
+from enum import IntEnum
 
 import numpy as np
 
-from src.evo_balt.evo import PhysicsType
-from src.evo_balt.evo import SWANParams
-
 OBSERVED_STATIONS = 3
+
+
+class SWANParams:
+    @staticmethod
+    def new_instance():
+        return SWANParams(drag_func=random.uniform(0, 5), physics_type=PhysicsType.GEN3,
+                          wcr=random.uniform(pow(10, -10), 2), ws=0.00302)
+
+    def __init__(self, drag_func, physics_type, wcr, ws):
+        '''
+        Represents parameters of SWAN model that will be evolve
+        :param drag_func:
+        :param physics_type: GEN1, GEN3 - enum ?
+        :param wcr: WhiteCappingRate
+        :param ws: Wave steepness
+        '''
+
+        self.drag_func = drag_func
+        self.physics_type = physics_type
+        self.wcr = wcr
+        self.ws = ws
+
+    def update(self, drag_func, physics_type, wcr, ws):
+        self.drag_func = drag_func
+        self.physics_type = physics_type
+        self.wcr = wcr
+        self.ws = ws
+
+
+class PhysicsType(IntEnum):
+    GEN1 = 0
+    GEN3 = 1
 
 
 class FakeModel:
@@ -28,8 +59,9 @@ class FakeModel:
         self.grid = self._empty_grid()
         for row in self.grid_file.rows:
             drag_idx, physics_idx, wcr_idx, ws_idx = self.params_idxs(row.model_params)
-            self.grid[drag_idx, physics_idx, wcr_idx, ws_idx] = \
-                [FakeModel.Forecast(station_idx=idx, grid_row=row) for idx in range(OBSERVED_STATIONS)]
+            self.grid[drag_idx, physics_idx, wcr_idx, ws_idx] = row.errors
+            # self.grid[drag_idx, physics_idx, wcr_idx, ws_idx] = \
+            #     [FakeModel.Forecast(station_idx=idx, grid_row=row) for idx in range(OBSERVED_STATIONS)]
 
     def _empty_grid(self):
         return np.empty((len(self.grid_file.drag_grid), len(PhysicsType),
@@ -137,4 +169,5 @@ class GridRow:
 # fake = FakeModel(grid_file=grid)
 
 # print(fake.params_idxs(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.4425, ws=0.00302)))
+# print(fake.output(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.4425, ws=0.00302)))
 # print(fake.closest_params(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.7, ws=0.00302)))
