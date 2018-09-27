@@ -34,6 +34,9 @@ class SWANParams:
         self.wcr = wcr
         self.ws = ws
 
+    def params_list(self):
+        return [self.drag_func, self.physics_type, self.wcr, self.ws]
+
 
 class PhysicsType(IntEnum):
     GEN1 = 0
