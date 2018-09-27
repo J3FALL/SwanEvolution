@@ -55,29 +55,45 @@ class SPEA2:
         def weighted_sum(self):
             return self.objectives[0] + self.objectives[1] + self.objectives[2]
 
+    class ErrorHistory:
+        class Point:
+            def __init__(self, genotype="", genotype_index=0, fitness_value=pow(10, 9), error_value=pow(10, 9)):
+                self.genotype = genotype
+                self.genotype_index = genotype_index
+                self.fitness_value = fitness_value
+                self.error_value = error_value
+
+        def __init__(self):
+            self.history = []
+
+        def add_new(self, genotype, genotype_index, fitness, error):
+            self.history.append(SPEA2.ErrorHistory.Point(genotype=genotype, genotype_index=genotype_index,
+                                                         fitness_value=fitness, error_value=error))
+
+        def last(self):
+            return SPEA2.ErrorHistory.Point() if len(self.history) == 0 else self.history[-1]
+
     def solution(self):
+        history = SPEA2.ErrorHistory()
         gen = 0
-        best_all = pow(10, 9)
         while gen < self.max_gens:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
             best = sorted(self._archive, key=lambda p: p.fitness())[0]
-
-            if best.fitness() < best_all:
-                best_all = best.fitness()
+            last_fit = history.last().fitness_value
+            if last_fit > best.fitness():
                 best_gens = best.genotype
                 print("new best: ", best_gens, best.fitness(), best.objectives,
                       sqrt(pow(best.objectives[0], 2) + pow(best.objectives[1], 2) + pow(best.objectives[2], 2)))
                 print(gen)
-                # if gen >= self.max_gens:
-                #     break
-
+                history.add_new(best_gens, gen, best.fitness(),
+                                sqrt(pow(best.objectives[0], 2) + pow(best.objectives[1], 2) + pow(best.objectives[2],
+                                                                                                   2)))
             selected = self.selected(self.pop_size, self._archive)
             self._pop = self.reproduce(selected, self.pop_size)
-
             gen += 1
 
-        return self._archive
+        return history
 
     def fitness(self):
         self.calculate_objectives(self._pop)
@@ -104,7 +120,7 @@ class SPEA2:
             params.update(drag_func=closest[0], physics_type=closest[1], wcr=closest[2], ws=closest[3])
             obj_station1, obj_station2, obj_station3 = self.model.output(params=params)
             p.objectives = (obj_station1, obj_station2, obj_station3)
-            print(p.objectives, sqrt(pow(p.objectives[0], 2) + pow(p.objectives[1], 2) + pow(p.objectives[2], 2)))
+            # print(p.objectives, sqrt(pow(p.objectives[0], 2) + pow(p.objectives[1], 2) + pow(p.objectives[2], 2)))
         # basic_objectives(pop)
 
     def calculate_dominated(self, pop):
@@ -231,14 +247,14 @@ class SPEA2:
 
     def mutation(self, individ):
         params = ['drag_func', 'wcr']
-        if random.random() > 0.5:
+        if random.random() > 0.2:
             param_to_mutate = params[random.randint(0, 1)]
 
             sign = 1 if random.random() < 0.5 else -1
             if param_to_mutate is 'drag_func':
-                individ.genotype.drag_func += sign * 0.05
+                individ.genotype.drag_func += sign * 0.1
             if param_to_mutate is 'wcr':
-                individ.genotype.drag_func += sign * (individ.genotype.drag_func * 5)
+                individ.genotype.wcr += sign * 0.01
         return individ
 
 
@@ -256,14 +272,8 @@ def basic_objectives(pop):
 
 def basic_mutation(individ):
     for idx in range(len(individ.genotype)):
-        if random.random() > 0.5:
+        if random.random() > 0.8:
             sign = 1 if random.random() < 0.5 else -1
             individ.genotype[idx] += sign * 0.1
 
     return individ
-
-
-# print(SPEA2(1000, 50, 30, 0.9).solution())
-
-evol = SPEA2(200, 50, 30, 0.9)
-print("result:", evol.solution())
