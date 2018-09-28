@@ -7,6 +7,8 @@ import numpy as np
 
 OBSERVED_STATIONS = 3
 
+from src.evo_balt.files import ObservationFile
+
 
 class SWANParams:
     @staticmethod
@@ -58,6 +60,8 @@ class FakeModel:
         self.grid_file = grid_file
         self._init_grids()
 
+        self.observations = self.observations_from_files()
+
     def _init_grids(self):
         self.grid = self._empty_grid()
         for row in self.grid_file.rows:
@@ -71,6 +75,15 @@ class FakeModel:
                          len(self.grid_file.wcr_grid),
                          len(self.grid_file.ws_grid)),
                         dtype=list)
+
+    def observations_from_files(self):
+        return [ObservationFile(path="../../samples/obs/1a_waves.txt").time_series(from_date="20140814.120000",
+                                                                                to_date="20140915.000000"),
+                ObservationFile(path="../../samples/obs/2a_waves.txt").time_series(from_date="20140814.120000",
+                                                                                to_date="20140915.000000"),
+                ObservationFile(path="../../samples/obs/3a_waves.txt").time_series(from_date="20140814.120000",
+                                                                                to_date="20140915.000000")
+                ]
 
     def params_idxs(self, params):
         drag_idx = self.grid_file.drag_grid.index(params.drag_func)
@@ -167,10 +180,3 @@ class GridRow:
         params_tuple = literal_eval(params_str)
         return SWANParams(drag_func=params_tuple[0], physics_type=params_tuple[1],
                           wcr=params_tuple[2], ws=params_tuple[3])
-
-# grid = GridFile(path="../../samples/grid_full.csv")
-# fake = FakeModel(grid_file=grid)
-
-# print(fake.params_idxs(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.4425, ws=0.00302)))
-# print(fake.output(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.4425, ws=0.00302)))
-# print(fake.closest_params(params=SWANParams(drag_func=0.1, physics_type=PhysicsType.GEN3, wcr=0.7, ws=0.00302)))
