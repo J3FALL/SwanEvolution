@@ -2,6 +2,7 @@ import random
 from ast import literal_eval
 from collections import Counter
 from enum import IntEnum
+from math import sqrt
 
 import numpy as np
 
@@ -78,11 +79,11 @@ class FakeModel:
 
     def observations_from_files(self):
         return [ObservationFile(path="../../samples/obs/1a_waves.txt").time_series(from_date="20140814.120000",
-                                                                                to_date="20140915.000000"),
+                                                                                   to_date="20140915.000000"),
                 ObservationFile(path="../../samples/obs/2a_waves.txt").time_series(from_date="20140814.120000",
-                                                                                to_date="20140915.000000"),
+                                                                                   to_date="20140915.000000"),
                 ObservationFile(path="../../samples/obs/3a_waves.txt").time_series(from_date="20140814.120000",
-                                                                                to_date="20140915.000000")
+                                                                                   to_date="20140915.000000")
                 ]
 
     def params_idxs(self, params):
@@ -119,6 +120,20 @@ class FakeModel:
 
         def _station_series(self, grid_row):
             return grid_row.forecasts[self.station_idx]
+
+    def error(self, forecast):
+        '''
+        Calculate RMSE of betwenn forecasts and observations for corresponding station
+        :param forecast: Forecast object
+        '''
+
+        observation = self.observations[forecast.station_idx]
+
+        result = 0.0
+        for pred, obs in zip(forecast.hsig_series, observation):
+            result += pow(pred - obs, 2)
+
+        return sqrt(result)
 
 
 class GridFile:
