@@ -6,10 +6,15 @@ class ObservationFile:
         self.path = path
 
     def time_series(self, from_date="", to_date=""):
+        '''
+        Extract all wave heights from file with observations for a given time period
+        :return: List of wave heights
+        '''
         with open(self.path) as file:
             lines = self._skip_meta_info(file.readlines())
             idx_from, idx_to = self._from_and_to_idxs(lines, from_date, to_date)
-            return lines[idx_from:idx_to + 1]
+            waves = self._wave_heights(time_series=lines[idx_from:idx_to + 1])
+            return waves
 
     def _skip_meta_info(self, lines):
         return list(filter(lambda line: line if not (line.startswith("#") or line.startswith("<")) else None, lines))
@@ -28,6 +33,13 @@ class ObservationFile:
         assert idx_from < idx_to
 
         return idx_from, idx_to
+
+    def _wave_heights(self, time_series):
+        '''
+        Extracting wave heights from time series of observation
+        '''
+        waves = [float(line.split()[5]) for line in time_series]
+        return waves
 
 
 class ForecastFile:
