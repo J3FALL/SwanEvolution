@@ -170,6 +170,7 @@ class SPEA2:
 
     def environmental_selection(self, pop, archive):
         union = archive + pop
+        # TODO: check value of fitness for union
         env = [p for p in union if p.fitness() < 1.0]
 
         if len(env) < self.archive_size:

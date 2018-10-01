@@ -2,6 +2,7 @@ from math import sqrt
 
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
 
 from evo import SPEA2
 from model import GridFile, FakeModel
@@ -12,9 +13,10 @@ fake = FakeModel(grid_file=grid)
 
 
 def optimize():
-    history = SPEA2(2000, 30, 10, 0.9).solution()
+    history = SPEA2(1500, 30, 10, 0.7).solution()
+
     params = history.last().genotype
-    errors = fake.output(params)
+
     forecasts = []
     for row in grid.rows:
         if set(row.model_params.params_list()) == set(params.params_list()):
@@ -50,6 +52,8 @@ def optimize():
 
     plt.show()
 
+    return history
+
 
 def error(row):
     return sqrt(pow(row.errors[0], 2) + pow(row.errors[1], 2) + pow(row.errors[2], 2))
@@ -70,7 +74,49 @@ def find_min_error(model, grid):
     return optimal, opt_row
 
 
-# print(min([error(row) for row in grid.rows]))
+def plot_rmse_surface(model):
+    history = optimize()
+    print([point.error_value for point in history.history])
 
-optimize()
-print(find_min_error(fake, grid))
+    drags = []
+    wcrs = []
+    errors = []
+    for point in history.history:
+        drags.append(point.genotype.drag_func)
+        wcrs.append(point.genotype.wcr)
+        errors.append(point.error_value)
+
+    x = np.zeros(len(model.grid_file.drag_grid))
+    y = np.zeros(len(model.grid_file.wcr_grid))
+    z = np.zeros((len(y), len(x)), dtype=np.float32)
+    points = []
+    for drag_idx in range(len(model.grid_file.drag_grid)):
+        for wcr_idx in range(len(model.grid_file.wcr_grid)):
+            forecasts = model.grid[drag_idx, 1, wcr_idx, 0]
+            rmse = \
+                sqrt(pow(model.error(forecasts[0]), 2) + pow(model.error(forecasts[1]), 2) +
+                     pow(model.error(forecasts[2]), 2))
+
+            points.append([model.grid_file.drag_grid[drag_idx], model.grid_file.wcr_grid[wcr_idx], rmse])
+            x[drag_idx] = model.grid_file.drag_grid[drag_idx]
+            y[wcr_idx] = model.grid_file.wcr_grid[wcr_idx]
+            z[wcr_idx, drag_idx] = rmse
+
+    X, Y = np.meshgrid(x, y)
+
+    fig = plt.figure()
+
+    ax = Axes3D(fig)
+
+    cset = ax.plot_surface(X, np.log10(Y), z, rstride=1, cstride=1,
+                           cmap='viridis', edgecolor='none')
+
+    ax.plot(drags, np.log10(wcrs), errors, marker='o', markersize=10)
+    ax.clabel(cset, fontsize=9, inline=1)
+    ax.set_xlabel('drag')
+    ax.set_ylabel('wcr')
+    ax.set_zlabel('rmse')
+    plt.show()
+
+
+plot_rmse_surface(fake)
