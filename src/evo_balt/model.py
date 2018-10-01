@@ -67,9 +67,9 @@ class FakeModel:
         self.grid = self._empty_grid()
         for row in self.grid_file.rows:
             drag_idx, physics_idx, wcr_idx, ws_idx = self.params_idxs(row.model_params)
-            self.grid[drag_idx, physics_idx, wcr_idx, ws_idx] = row.errors
-            # self.grid[drag_idx, physics_idx, wcr_idx, ws_idx] = \
-            #     [FakeModel.Forecast(station_idx=idx, grid_row=row) for idx in range(OBSERVED_STATIONS)]
+            # self.grid[drag_idx, physics_idx, wcr_idx, ws_idx] = row.errors
+            self.grid[drag_idx, physics_idx, wcr_idx, ws_idx] = \
+                [FakeModel.Forecast(station_idx=idx, grid_row=row) for idx in range(OBSERVED_STATIONS)]
 
     def _empty_grid(self):
         return np.empty((len(self.grid_file.drag_grid), len(PhysicsType),
@@ -109,7 +109,7 @@ class FakeModel:
         :return: List of forecasts for each station
         '''
         drag_idx, physics_idx, wcr_idx, ws_idx = self.params_idxs(params=params)
-        return self.grid[drag_idx, physics_idx, wcr_idx, ws_idx]
+        return [self.error(forecast) for forecast in self.grid[drag_idx, physics_idx, wcr_idx, ws_idx]]
 
     class Forecast:
         def __init__(self, station_idx, grid_row):
