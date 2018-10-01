@@ -38,7 +38,7 @@ class ObservationFile:
         '''
         Extracting wave heights from time series of observation
         '''
-        waves = [float(line.split()[5]) for line in time_series]
+        waves = [float(line.split()[4]) for line in time_series]
         return waves
 
 
