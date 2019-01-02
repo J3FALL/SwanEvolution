@@ -1,3 +1,4 @@
+from functools import partial
 from math import sqrt
 
 import matplotlib.pyplot as plt
@@ -5,15 +6,20 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
 from evo import SPEA2
-from model import GridFile, FakeModel
+from model import GridFile, FakeModel, SWANParams
 from src.evo_balt.files import ObservationFile
+from src.evo_balt.swan_evo import calculate_objectives, crossover, mutation
 
 grid = GridFile(path="../../samples/grid_era_full.csv")
 fake = FakeModel(grid_file=grid)
 
 
 def optimize():
-    history = SPEA2(1500, 30, 10, 0.7).solution()
+    history = SPEA2(params=SPEA2.Params(max_gens=25, pop_size=50, archive_size=20, crossover_rate=0.5),
+                    new_individ=SWANParams.new_instance,
+                    objectives=partial(calculate_objectives, fake),
+                    crossover=crossover,
+                    mutation=mutation).solution()
 
     params = history.last().genotype
 
@@ -119,4 +125,29 @@ def plot_rmse_surface(model):
     plt.show()
 
 
+def plot_sensitivity():
+    drag_values = grid.drag_grid
+    station_1 = []
+    station_2 = []
+    station_3 = []
+    rmse_full = []
+    for drag_idx in range(len(drag_values)):
+        forecasts = fake.grid[drag_idx, 1, 0, 0]
+
+        station_1.append(fake.error(forecasts[0]))
+        station_2.append(fake.error(forecasts[1]))
+        station_3.append(fake.error(forecasts[2]))
+
+        rmse_full.append(sqrt(pow(station_1[-1], 2) + pow(station_2[-1], 2) + pow(station_3[-1], 2)))
+
+    plt.figure()
+    plt.plot(drag_values, station_1, label='Station 1, RMSE')
+    plt.plot(drag_values, station_2, label='Station 2, RMSE')
+    plt.plot(drag_values, station_3, label='Station 3, RMSE')
+    plt.plot(drag_values, rmse_full, label='Full RMSE')
+    plt.legend()
+    plt.show()
+
+
+# plot_sensitivity()
 plot_rmse_surface(fake)

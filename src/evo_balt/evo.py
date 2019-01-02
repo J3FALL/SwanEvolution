@@ -4,13 +4,18 @@ from datetime import datetime
 from math import sqrt
 from operator import itemgetter
 
+import matplotlib.pyplot as plt
+import seaborn as sns
 import yaml
-
-from src.evo_balt.model import FakeModel
-from src.evo_balt.model import GridFile
-from src.evo_balt.model import SWANParams
+from mpl_toolkits.mplot3d import Axes3D
 
 random.seed(datetime.now())
+
+from model import GridFile, FakeModel
+import numpy as np
+
+grid = GridFile(path="../../samples/grid_era_full.csv")
+fake = FakeModel(grid_file=grid)
 
 
 class EvoConfig:
@@ -26,20 +31,34 @@ class EvoConfig:
 
 
 class SPEA2:
-    def __init__(self, max_gens, pop_size, archive_size, crossover_rate):
-        self.max_gens = max_gens
-        self.pop_size = pop_size
-        self.archive_size = archive_size
-        self.crossover_rate = crossover_rate
+    def __init__(self, params, new_individ, objectives, crossover, mutation):
+        '''
+         Strength Pareto Evolutionary Algorithm
+        :param params: Meta-parameters of the SPEA2
+        :param new_individ: function to generate new individuals for population
+        :param objectives: function to calculate objective functions for each individual in population
+        :param crossover: function to crossover two genotypes
+        :param mutation: function to mutate genotype
+        '''
+        self.params = params
+
+        self.new_individ = new_individ
+        self.objectives = objectives
+        self.crossover = crossover
+        self.mutation = mutation
 
         self._init_populations()
 
-        self.model = FakeModel(grid_file=GridFile(path="../../samples/grid_full.csv"))
-
     def _init_populations(self):
-        self._pop = [SPEA2.Individ(genotype=SWANParams.new_instance()) for _ in range(self.pop_size)]
-        # self._pop = basic_population(self.pop_size)
+        self._pop = [SPEA2.Individ(genotype=self.new_individ()) for _ in range(self.params.pop_size)]
         self._archive = []
+
+    class Params:
+        def __init__(self, max_gens, pop_size, archive_size, crossover_rate):
+            self.max_gens = max_gens
+            self.pop_size = pop_size
+            self.archive_size = archive_size
+            self.crossover_rate = crossover_rate
 
     class Individ:
         def __init__(self, genotype):
@@ -50,10 +69,11 @@ class SPEA2:
             self.density = 0
 
         def fitness(self):
-            return self.raw_fitness + self.density
+            # return self.raw_fitness + self.density
+            return rmse(self)
 
         def weighted_sum(self):
-            return self.objectives[0] + self.objectives[1] + self.objectives[2]
+            return sum(list(self.objectives))
 
     class ErrorHistory:
         class Point:
@@ -74,54 +94,44 @@ class SPEA2:
             return SPEA2.ErrorHistory.Point() if len(self.history) == 0 else self.history[-1]
 
     def solution(self):
+        fits = []
         history = SPEA2.ErrorHistory()
         gen = 0
-        while gen < self.max_gens:
+        while gen < self.params.max_gens:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
+            # plot_population_movement(pop=self._pop, model=fake)
+
+            fits.append([rmse(p) for p in
+                         self._archive])
+
             best = sorted(self._archive, key=lambda p: p.fitness())[0]
             last_fit = history.last().fitness_value
             if last_fit > best.fitness():
                 best_gens = best.genotype
                 print("new best: ", best.fitness(), best.objectives,
-                      sqrt(pow(best.objectives[0], 2) + pow(best.objectives[1], 2) + pow(best.objectives[2], 2)))
+                      rmse(best))
                 print(gen)
                 history.add_new(best_gens, gen, best.fitness(),
-                                sqrt(pow(best.objectives[0], 2) + pow(best.objectives[1], 2) + pow(best.objectives[2],
-                                                                                                   2)))
-            selected = self.selected(self.pop_size, self._archive)
-            self._pop = self.reproduce(selected, self.pop_size)
+                                rmse(best))
+            selected = self.selected(self.params.pop_size, self._archive)
+            self._pop = self.reproduce(selected, self.params.pop_size)
             gen += 1
 
+        plot_fitness_boxplots(fits)
         return history
 
     def fitness(self):
-        self.calculate_objectives(self._pop)
+        self.objectives(self._pop)
         union = self._archive + self._pop
         self.calculate_dominated(union)
 
-        for p in self._pop:
+        for p in union:
             p.raw_fitness = self.calculate_raw_fitness(p, union)
             p.density = self.calculate_density(p, union)
+            # print(p.raw_fitness, p.density, p.objectives)
 
-    def calculate_objectives(self, pop):
-        '''
-        Calculate two error functions i.e. |model_out - observation| ^ 2
-        :param pop:
-        :return:
-        '''
-
-        # Extract model_output with FakeModel for corresponding population params
-        # Calculate errors
-
-        for p in pop:
-            params = p.genotype
-            closest = self.model.closest_params(params)
-            params.update(drag_func=closest[0], physics_type=closest[1], wcr=closest[2], ws=closest[3])
-            obj_station1, obj_station2, obj_station3 = self.model.output(params=params)
-            p.objectives = (obj_station1, obj_station2, obj_station3)
-            # print(p.objectives, sqrt(pow(p.objectives[0], 2) + pow(p.objectives[1], 2) + pow(p.objectives[2], 2)))
-        # basic_objectives(pop)
+        # plot_pareto(self._pop)
 
     def calculate_dominated(self, pop):
         '''
@@ -157,7 +167,8 @@ class SPEA2:
             distances_to_src.append(self.euclidean_distance(src.objectives, p.objectives))
         distances_to_src = sorted(distances_to_src)
 
-        k = int(sqrt(self.pop_size))
+        k = int(sqrt(self.params.pop_size + self.params.archive_size))
+        # k = 1
         density = 1.0 / (distances_to_src[k] + 2.0)
         return density
 
@@ -171,34 +182,38 @@ class SPEA2:
     def environmental_selection(self, pop, archive):
         union = archive + pop
         # TODO: check value of fitness for union
-        env = [p for p in union if p.fitness() < 1.0]
+        env = [p for p in union if p.fitness() < 15.0]
 
-        if len(env) < self.archive_size:
+        if len(env) < self.params.archive_size:
+            # print("adding")
             # Fill the archive with the remaining candidate solutions
             union.sort(key=lambda p: p.fitness())
             for p in union:
-                if len(env) >= self.archive_size:
+                if len(env) >= self.params.archive_size:
                     break
-                if p.fitness() >= 1.0:
+                # TODO: check value of fitness for union
+                if p.fitness() >= 15.0:
                     env.append(p)
-        elif len(env) > self.archive_size:
+        elif len(env) > self.params.archive_size:
             while True:
+                # print("truncate")
                 # Truncate the archive population
                 k = int(sqrt(len(env)))
-
+                # k = 1
                 dens = []
                 for p1 in env:
                     distances_to_p1 = []
                     for p2 in env:
                         distances_to_p1.append(self.euclidean_distance(p1.objectives, p2.objectives))
                     distances_to_p1 = sorted(distances_to_p1)
+                    # TODO: check density formula
                     density = 1.0 / (distances_to_p1[k] + 2.0)
                     dens.append((p1, density))
                 dens.sort(key=itemgetter(1))
                 to_remove = dens[0][0]
                 env.remove(to_remove)
 
-                if len(env) <= self.archive_size:
+                if len(env) <= self.params.archive_size:
                     break
         return env
 
@@ -210,26 +225,30 @@ class SPEA2:
         return selected
 
     def binary_tournament(self, pop):
-        random.seed(datetime.now())
+        # random.seed(datetime.now())
 
         i, j = random.randint(0, len(pop) - 1), random.randint(0, len(pop) - 1)
 
         while j == i:
             j = random.randint(0, len(pop) - 1)
-
         return pop[i] if pop[i].fitness() < pop[j].fitness() else pop[j]
 
     def reproduce(self, selected, pop_size):
         children = []
-
+        # selected = sorted(selected, key=lambda p: p.fitness())
+        #
+        # best_range = int(0.3 * pop_size)
+        # best_parents = selected[:best_range]
+        # children.extend(best_parents)
         for p1 in selected:
             idx = selected.index(p1)
             p2 = selected[idx + 1] if idx % 2 == 0 else selected[idx - 1]
             if idx == len(selected) - 1:
                 p2 = selected[0]
 
-            child = self.crossover(p1, p2, self.crossover_rate)
-            child = self.mutation(child)
+            child_gen = self.crossover(p1.genotype, p2.genotype, self.params.crossover_rate)
+            child_gen = self.mutation(child_gen)
+            child = SPEA2.Individ(genotype=child_gen)
             children.append(child)
 
             if len(children) >= pop_size:
@@ -237,44 +256,73 @@ class SPEA2:
 
         return children
 
-    def crossover(self, p1, p2, rate):
-        if random.random() >= rate:
-            return p1
 
-        child_params = SWANParams(drag_func=p1.genotype.drag_func, physics_type=p1.genotype.physics_type,
-                                  wcr=p2.genotype.wcr, ws=p2.genotype.ws)
-        child = SPEA2.Individ(genotype=child_params)
-        return child
-
-    def mutation(self, individ):
-        params = ['drag_func', 'wcr']
-        if random.random() > 0.2:
-            param_to_mutate = params[random.randint(0, 1)]
-
-            sign = 1 if random.random() < 0.5 else -1
-            if param_to_mutate is 'drag_func':
-                individ.genotype.drag_func += sign * 0.1
-            if param_to_mutate is 'wcr':
-                individ.genotype.wcr += sign * 0.01
-        return individ
+def rmse(individ):
+    result = 0.0
+    for obj in individ.objectives:
+        result += pow(obj, 2)
+    return sqrt(result)
 
 
-def basic_population(pop_size):
-    random.seed(datetime.now())
-    return [SPEA2.Individ(genotype=[random.randint(-10, 10), random.randint(-10, 10)]) for _ in range(pop_size)]
+def plot_fitness_boxplots(history):
+    history = history[:50]
+    plt.figure(figsize=(5, 5))
+    sns.boxplot(
+        data=history,
+    )
+    plt.show()
 
 
-def basic_objectives(pop):
+def plot_pareto(pop):
+    fig = plt.figure()
+
+    ax = Axes3D(fig)
+    ax.scatter([p.objectives[0] for p in pop], [p.objectives[1] for p in pop],
+               [p.objectives[2] for p in pop])
+    ax.set_xlabel('station 1')
+    ax.set_ylabel('station 2')
+    ax.set_zlabel('station 3')
+    plt.show()
+
+
+def plot_population_movement(pop, model=fake):
+    points = []
+
+    drags = []
+    wcrs = []
+    errors = []
     for p in pop:
-        obj1 = pow(p.genotype[0], 2) + pow(p.genotype[1], 2)
-        obj2 = pow(p.genotype[0] - 2, 2) + pow(p.genotype[1] - 2, 2)
-        p.objectives = (obj1, obj2)
+        drags.append(p.genotype.drag_func)
+        wcrs.append(p.genotype.wcr)
+        errors.append(p.fitness())
 
+    x = np.zeros(len(model.grid_file.drag_grid))
+    y = np.zeros(len(model.grid_file.wcr_grid))
+    z = np.zeros((len(y), len(x)), dtype=np.float32)
+    for drag_idx in range(len(model.grid_file.drag_grid)):
+        for wcr_idx in range(len(model.grid_file.wcr_grid)):
+            forecasts = model.grid[drag_idx, 1, wcr_idx, 0]
+            rmse = \
+                sqrt(pow(model.error(forecasts[0]), 2) + pow(model.error(forecasts[1]), 2) +
+                     pow(model.error(forecasts[2]), 2))
 
-def basic_mutation(individ):
-    for idx in range(len(individ.genotype)):
-        if random.random() > 0.8:
-            sign = 1 if random.random() < 0.5 else -1
-            individ.genotype[idx] += sign * 0.1
+            points.append([model.grid_file.drag_grid[drag_idx], model.grid_file.wcr_grid[wcr_idx], rmse])
+            x[drag_idx] = model.grid_file.drag_grid[drag_idx]
+            y[wcr_idx] = model.grid_file.wcr_grid[wcr_idx]
+            z[wcr_idx, drag_idx] = rmse
 
-    return individ
+    X, Y = np.meshgrid(x, y)
+
+    fig = plt.figure()
+
+    ax = Axes3D(fig)
+
+    cset = ax.plot_surface(X, np.log10(Y), z, rstride=1, cstride=1,
+                           cmap='viridis', edgecolor='none', alpha=0.7)
+
+    ax.scatter(drags, np.log10(wcrs), errors, c='r', s=25)
+    ax.clabel(cset, fontsize=9, inline=1)
+    ax.set_xlabel('drag')
+    ax.set_ylabel('wcr')
+    ax.set_zlabel('rmse')
+    plt.show()

@@ -1,3 +1,4 @@
+import os
 import random
 from ast import literal_eval
 from collections import Counter
@@ -10,12 +11,17 @@ OBSERVED_STATIONS = 3
 
 from src.evo_balt.files import ObservationFile
 
+wcr_range = [4.425e-10, 8.85e-10, 1.3275e-09, 4.425e-09, 8.85e-09, 1.3275e-08, 4.425e-08, 8.85e-08, 1.3275e-07,
+             4.425e-07, 8.85e-07, 1.3275000000000002e-06, 4.425e-06, 8.85e-06, 1.3275e-05, 4.425e-05, 8.85e-05,
+             0.00013275, 0.00044249999999999997, 0.0008849999999999999, 0.0013275000000000001, 0.004425, 0.00885,
+             0.013275000000000002, 0.04425, 0.0885, 0.13275, 0.4425, 0.885, 1.3274999999999997]
+
 
 class SWANParams:
     @staticmethod
     def new_instance():
         return SWANParams(drag_func=random.uniform(0, 5), physics_type=PhysicsType.GEN3,
-                          wcr=random.uniform(pow(10, -10), 2), ws=0.00302)
+                          wcr=random.choice(wcr_range), ws=0.00302)
 
     def __init__(self, drag_func, physics_type, wcr, ws):
         '''
@@ -152,7 +158,7 @@ class GridFile:
 
     def _load(self):
         import csv
-        with open(self.path, newline='') as csvfile:
+        with open(os.path.join(os.path.dirname(__file__), self.path), newline='') as csvfile:
             reader = csv.DictReader(csvfile)
 
             grid_rows = [GridRow(row) for row in reader]
