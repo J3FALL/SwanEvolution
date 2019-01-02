@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 
@@ -10,7 +11,7 @@ class ObservationFile:
         Extract all wave heights from file with observations for a given time period
         :return: List of wave heights
         '''
-        with open(self.path) as file:
+        with open(os.path.join(os.path.dirname(__file__), self.path)) as file:
             lines = self._skip_meta_info(file.readlines())
             idx_from, idx_to = self._from_and_to_idxs(lines, from_date, to_date)
             waves = self._wave_heights(time_series=lines[idx_from:idx_to + 1])
