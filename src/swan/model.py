@@ -9,7 +9,7 @@ import numpy as np
 
 OBSERVED_STATIONS = 3
 
-from src.evo_balt.files import ObservationFile
+from src.swan.files import ObservationFile
 
 wcr_range = [4.425e-10, 8.85e-10, 1.3275e-09, 4.425e-09, 8.85e-09, 1.3275e-08, 4.425e-08, 8.85e-08, 1.3275e-07,
              4.425e-07, 8.85e-07, 1.3275000000000002e-06, 4.425e-06, 8.85e-06, 1.3275e-05, 4.425e-05, 8.85e-05,
