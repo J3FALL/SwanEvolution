@@ -1,7 +1,7 @@
 import unittest
 
-from src.evo_balt.files import ForecastFile
-from src.evo_balt.files import ObservationFile
+from src.evo_old.files import ForecastFile
+from src.evo_old.files import ObservationFile
 
 
 class ObservationFileTest(unittest.TestCase):
@@ -10,7 +10,6 @@ class ObservationFileTest(unittest.TestCase):
         ts = obs.time_series(from_date="20140814.120000",
                              to_date="20140915.000000")
         self.assertEqual(len(ts), 253)
-
 
 
 class ForecastFileTest(unittest.TestCase):

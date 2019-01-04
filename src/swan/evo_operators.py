@@ -1,6 +1,6 @@
 import random
 
-from src.evo_balt.model import SWANParams
+from src.swan.model import SWANParams
 
 
 def calculate_objectives(model, pop):

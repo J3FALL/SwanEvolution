@@ -7,8 +7,8 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from model import GridFile, FakeModel, SWANParams
 from src.algorithm.spea2 import SPEA2
-from src.evo_balt.files import ObservationFile
-from src.evo_balt.swan_evo import calculate_objectives, crossover, mutation
+from src.evo_old.files import ObservationFile
+from src.swan.evo_operators import calculate_objectives, crossover, mutation
 
 grid = GridFile(path="../../samples/grid_era_full.csv")
 fake = FakeModel(grid_file=grid)
