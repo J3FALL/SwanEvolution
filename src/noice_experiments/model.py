@@ -1,5 +1,6 @@
 import csv
 import os
+import random
 from collections import Counter
 from math import sqrt
 
@@ -15,8 +16,16 @@ from src.swan.files import (
     ObservationFile
 )
 
+cfw_range = [0.005, 0.01, 0.015, 0.02, 0.025, 0.030000000000000002, 0.035, 0.04, 0.045, 0.049999999999999996]
+stpm_range = [0.001, 0.002, 0.003, 0.004]
+
 
 class SWANParams:
+
+    @staticmethod
+    def new_instance():
+        return SWANParams(drf=random.uniform(0, 5), cfw=random.choice(cfw_range), stpm=random.choice(stpm_range))
+
     def __init__(self, drf, cfw, stpm):
         self.drf = drf
         self.cfw = cfw
@@ -26,6 +35,9 @@ class SWANParams:
         self.drf = drf
         self.cfw = cfw
         self.stpm = stpm
+
+    def params_list(self):
+        return [self.drf, self.cfw, self.stpm]
 
 
 class FakeModel:
@@ -97,7 +109,7 @@ class FakeModel:
         for pred, obs in zip(forecast.hsig_series, observation):
             result += pow(pred - obs, 2)
 
-        return sqrt(result)
+        return sqrt(result / len(observation))
 
     class Forecast:
         def __init__(self, station_idx, forecast_file):
@@ -158,10 +170,3 @@ def observations_from_files():
             ObservationFile(path="../../samples/obs/3a_waves.txt").time_series(from_date="20140814.120000",
                                                                                to_date="20140915.000000")
             ]
-
-
-grid = CSVGridFile('../../samples/wind-exp-params.csv')
-
-fake = FakeModel(grid_file=grid)
-
-print(fake.output(grid.rows[0].model_params))
