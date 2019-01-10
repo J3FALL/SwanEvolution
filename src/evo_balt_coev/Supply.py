@@ -8,8 +8,8 @@ import Consts
 import Data
 import Log
 import SwanFunctions
-from src.evo_old.files import ForecastFile
-from src.evo_old.files import ObservationFile
+from src.simple_evo.files import ForecastFile
+from src.simple_evo.files import ObservationFile
 
 
 class ModelDate:
