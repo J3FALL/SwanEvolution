@@ -1,7 +1,7 @@
 import unittest
 
-from src.evo_balt.model import FakeModel
-from src.evo_balt.model import GridFile
+from src.simple_evo.model import FakeModel
+from src.simple_evo.model import GridFile
 
 
 class FakeModelTest(unittest.TestCase):

@@ -1,6 +1,6 @@
 import random
 
-from src.evo_balt.model import SWANParams
+from src.swan.model import SWANParams
 
 
 def calculate_objectives(model, pop):
@@ -27,9 +27,9 @@ def crossover(p1, p2, rate):
     return child_params
 
 
-def mutation(individ):
+def mutation(individ, rate):
     params = ['drag_func', 'wcr']
-    if random.random() < 0.2:
+    if random.random() >= rate:
         param_to_mutate = params[random.randint(0, 1)]
 
         sign = 1 if random.random() < 0.5 else -1
