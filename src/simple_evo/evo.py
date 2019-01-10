@@ -4,18 +4,9 @@ from datetime import datetime
 from math import sqrt
 from operator import itemgetter
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 import yaml
-from mpl_toolkits.mplot3d import Axes3D
 
 random.seed(datetime.now())
-
-from model import GridFile, FakeModel
-import numpy as np
-
-grid = GridFile(path="../../samples/grid_era_full.csv")
-fake = FakeModel(grid_file=grid)
 
 
 class EvoConfig:
@@ -54,11 +45,12 @@ class SPEA2:
         self._archive = []
 
     class Params:
-        def __init__(self, max_gens, pop_size, archive_size, crossover_rate):
+        def __init__(self, max_gens, pop_size, archive_size, crossover_rate, mutation_rate):
             self.max_gens = max_gens
             self.pop_size = pop_size
             self.archive_size = archive_size
             self.crossover_rate = crossover_rate
+            self.mutation_rate = mutation_rate
 
     class Individ:
         def __init__(self, genotype):
@@ -118,7 +110,6 @@ class SPEA2:
             self._pop = self.reproduce(selected, self.params.pop_size)
             gen += 1
 
-        plot_fitness_boxplots(fits)
         return history
 
     def fitness(self):
@@ -131,7 +122,7 @@ class SPEA2:
             p.density = self.calculate_density(p, union)
             # print(p.raw_fitness, p.density, p.objectives)
 
-        # plot_pareto(self._pop)
+            # plot_pareto(self._pop)
 
     def calculate_dominated(self, pop):
         '''
@@ -247,7 +238,7 @@ class SPEA2:
                 p2 = selected[0]
 
             child_gen = self.crossover(p1.genotype, p2.genotype, self.params.crossover_rate)
-            child_gen = self.mutation(child_gen)
+            child_gen = self.mutation(child_gen, self.params.mutation_rate)
             child = SPEA2.Individ(genotype=child_gen)
             children.append(child)
 
@@ -262,67 +253,3 @@ def rmse(individ):
     for obj in individ.objectives:
         result += pow(obj, 2)
     return sqrt(result)
-
-
-def plot_fitness_boxplots(history):
-    history = history[:50]
-    plt.figure(figsize=(5, 5))
-    sns.boxplot(
-        data=history,
-    )
-    plt.show()
-
-
-def plot_pareto(pop):
-    fig = plt.figure()
-
-    ax = Axes3D(fig)
-    ax.scatter([p.objectives[0] for p in pop], [p.objectives[1] for p in pop],
-               [p.objectives[2] for p in pop])
-    ax.set_xlabel('station 1')
-    ax.set_ylabel('station 2')
-    ax.set_zlabel('station 3')
-    plt.show()
-
-
-def plot_population_movement(pop, model=fake):
-    points = []
-
-    drags = []
-    wcrs = []
-    errors = []
-    for p in pop:
-        drags.append(p.genotype.drag_func)
-        wcrs.append(p.genotype.wcr)
-        errors.append(p.fitness())
-
-    x = np.zeros(len(model.grid_file.drag_grid))
-    y = np.zeros(len(model.grid_file.wcr_grid))
-    z = np.zeros((len(y), len(x)), dtype=np.float32)
-    for drag_idx in range(len(model.grid_file.drag_grid)):
-        for wcr_idx in range(len(model.grid_file.wcr_grid)):
-            forecasts = model.grid[drag_idx, 1, wcr_idx, 0]
-            rmse = \
-                sqrt(pow(model.error(forecasts[0]), 2) + pow(model.error(forecasts[1]), 2) +
-                     pow(model.error(forecasts[2]), 2))
-
-            points.append([model.grid_file.drag_grid[drag_idx], model.grid_file.wcr_grid[wcr_idx], rmse])
-            x[drag_idx] = model.grid_file.drag_grid[drag_idx]
-            y[wcr_idx] = model.grid_file.wcr_grid[wcr_idx]
-            z[wcr_idx, drag_idx] = rmse
-
-    X, Y = np.meshgrid(x, y)
-
-    fig = plt.figure()
-
-    ax = Axes3D(fig)
-
-    cset = ax.plot_surface(X, np.log10(Y), z, rstride=1, cstride=1,
-                           cmap='viridis', edgecolor='none', alpha=0.7)
-
-    ax.scatter(drags, np.log10(wcrs), errors, c='r', s=25)
-    ax.clabel(cset, fontsize=9, inline=1)
-    ax.set_xlabel('drag')
-    ax.set_ylabel('wcr')
-    ax.set_zlabel('rmse')
-    plt.show()

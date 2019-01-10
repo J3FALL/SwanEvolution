@@ -5,21 +5,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-from evo import SPEA2
-from model import GridFile, FakeModel, SWANParams
-from src.evo_balt.files import ObservationFile
-from src.evo_balt.swan_evo import calculate_objectives, crossover, mutation
+from src.simple_evo.evo import SPEA2
+from src.swan.evo_operators import calculate_objectives, crossover, mutation
+from src.swan.files import ObservationFile
+from src.swan.model import GridFile, FakeModel, SWANParams
 
 grid = GridFile(path="../../samples/grid_era_full.csv")
 fake = FakeModel(grid_file=grid)
 
 
 def optimize():
-    history = SPEA2(params=SPEA2.Params(max_gens=25, pop_size=50, archive_size=20, crossover_rate=0.5),
-                    new_individ=SWANParams.new_instance,
-                    objectives=partial(calculate_objectives, fake),
-                    crossover=crossover,
-                    mutation=mutation).solution()
+    history = SPEA2(
+        params=SPEA2.Params(max_gens=100, pop_size=20, archive_size=10, crossover_rate=0.8, mutation_rate=0.8),
+        new_individ=SWANParams.new_instance,
+        objectives=partial(calculate_objectives, fake),
+        crossover=crossover,
+        mutation=mutation).solution()
 
     params = history.last().genotype
 
