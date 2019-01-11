@@ -1,4 +1,6 @@
+import csv
 from functools import partial
+from math import sqrt
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,7 +25,7 @@ fake = FakeModel(grid_file=grid)
 
 def optimize():
     history = SPEA2(
-        params=SPEA2.Params(max_gens=500, pop_size=20, archive_size=10, crossover_rate=0.8, mutation_rate=0.8),
+        params=SPEA2.Params(max_gens=1000, pop_size=10, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives, fake),
         crossover=crossover,
@@ -70,4 +72,26 @@ def optimize():
     return history
 
 
+def grid_rmse():
+    errors_total = []
+    with open('params_rmse.csv', mode='w', newline='') as csv_file:
+        writer = csv.writer(csv_file, delimiter=',')
+        writer.writerow(['ID', 'DRF', 'CFW', 'STPM', 'RMSE_K1', 'RMSE_K2', 'RMSE_K3', 'TOTAL_RMSE'])
+        for row in grid.rows:
+            error = fake.output(params=row.model_params)
+            errors_total.append(rmse(error))
+
+            row_to_write = row.model_params.params_list()
+            row_to_write.extend(error)
+            row_to_write.append(rmse(error))
+            writer.writerow(row_to_write)
+
+    print(f'min total rmse: {min(errors_total)}')
+
+
+def rmse(vars):
+    return sqrt(sum([pow(v, 2) for v in vars]) / len(vars))
+
+
 optimize()
+# rid_rmse()
