@@ -95,4 +95,46 @@ def plot_params_space():
                 error[station, i, j] = diff[station]
 
 
-plot_params_space()
+def plot_error_variance(station_index=2, stmp_index=3):
+    noise_dirs = {1: '../../../samples/wind-noice-runs/results/1/',
+                  15: '../../../samples/wind-noice-runs/results/15/',
+                  25: '../../../samples/wind-noice-runs/results/25/'}
+    model_by_noise = {}
+
+    grid = CSVGridFile('../../samples/wind-exp-params.csv')
+
+    for noise in noise_dirs.keys():
+        model = FakeModel(grid_file=grid, forecasts_path=noise_dirs[noise], noise_run=noise)
+        model_by_noise[noise] = model
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    for noise in model_by_noise.keys():
+        drf, cfw, error = \
+            params_and_error_grid(model=model_by_noise[noise], station_index=station_index, stpm_index=stmp_index)
+
+        ax.scatter(drf, cfw, error, label=f'noise = {noise}')
+        ax.set_xlabel('drf')
+        ax.set_ylabel('cfw')
+
+    plt.title(f'Error variance for K{station_index} station')
+    plt.legend()
+    plt.show()
+
+
+def params_and_error_grid(model, station_index, stpm_index):
+    drf, cfw = np.meshgrid(model.grid_file.drf_grid, model.grid_file.cfw_grid)
+    stpm_fixed = model.grid_file.stpm_grid[stpm_index]
+
+    error = np.ones(shape=drf.shape)
+    for i in range(drf.shape[0]):
+        for j in range(drf.shape[1]):
+            out_by_stations = model.output(params=SWANParams(drf=drf[i, j], cfw=cfw[i, j], stpm=stpm_fixed))
+            error[i, j] = out_by_stations[station_index]
+
+    return drf, cfw, error
+
+
+plot_error_variance()
+# plot_params_space()
