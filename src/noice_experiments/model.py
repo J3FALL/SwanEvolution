@@ -41,10 +41,11 @@ class SWANParams:
 
 
 class FakeModel:
-    def __init__(self, grid_file, forecasts_path):
+    def __init__(self, grid_file, forecasts_path, noise_run=1):
         self.grid_file = grid_file
         self.observations = observations_from_files()
         self.forecasts_path = forecasts_path
+        self.noise_run = noise_run
         self._init_grids()
 
     def _init_grids(self):
@@ -52,7 +53,7 @@ class FakeModel:
 
         files = forecast_files_from_dir(self.forecasts_path)
 
-        stations = files_by_stations(files, noise_run=1)
+        stations = files_by_stations(files, noise_run=self.noise_run)
 
         files_by_run_idx = dict()
 
