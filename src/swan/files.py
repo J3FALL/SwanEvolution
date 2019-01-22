@@ -1,3 +1,4 @@
+import csv
 import os
 from datetime import datetime
 
@@ -65,3 +66,20 @@ class FormattedDate:
     def target(self, date, time):
         return datetime.strptime(" ".join([date, time]), self._source_date_pattern).strftime(
             self._target_date_pattern) + self._target_suffix
+
+
+class WaveWatchObservationFile:
+    def __init__(self, path):
+        self.path = path
+
+    def time_series(self):
+        with open(os.path.join(os.path.dirname(__file__), self.path), newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            results = [float(row['hs']) for row in reader]
+
+            return results
+
+
+ww3_file = WaveWatchObservationFile(path='../../samples/ww-res/obs_fromww_1.csv')
+
+print(ww3_file.time_series())
