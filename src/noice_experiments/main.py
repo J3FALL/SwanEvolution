@@ -18,9 +18,9 @@ from src.noice_experiments.model import SWANParams
 from src.simple_evo.evo import SPEA2
 from src.swan.files import ObservationFile
 
-grid = CSVGridFile('../../samples/wind-exp-params.csv')
+grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-fake = FakeModel(grid_file=grid, forecasts_path='../../samples/wind-noice-runs/results/1/')
+fake = FakeModel(grid_file=grid, forecasts_path='../../samples/wind-noice-runs/results_fixed/15/', noise_run=15)
 
 
 def optimize():
@@ -39,6 +39,9 @@ def optimize():
             drf_idx, cfw_idx, stpm_idx = fake.params_idxs(row.model_params)
             forecasts = fake.grid[drf_idx, cfw_idx, stpm_idx]
             print("index : %d" % grid.rows.index(row))
+
+    # drf_idx, cfw_idx, stpm_idx = fake.params_idxs(grid.rows[296].model_params)
+    # forecasts = fake.grid[drf_idx, cfw_idx, stpm_idx]
 
     waves_1 = ObservationFile(path="../../samples/obs/1a_waves.txt").time_series(from_date="20140814.120000",
                                                                                  to_date="20140915.000000")
@@ -74,11 +77,17 @@ def optimize():
 
 def grid_rmse():
     errors_total = []
+    m_error = pow(10, 9)
     with open('params_rmse.csv', mode='w', newline='') as csv_file:
         writer = csv.writer(csv_file, delimiter=',')
         writer.writerow(['ID', 'DRF', 'CFW', 'STPM', 'RMSE_K1', 'RMSE_K2', 'RMSE_K3', 'TOTAL_RMSE'])
         for row in grid.rows:
             error = fake.output(params=row.model_params)
+            print(grid.rows.index(row), error)
+
+            if m_error > rmse(error):
+                m_error = rmse(error)
+                print(f"new min: {m_error}; {row.model_params.params_list()}")
             errors_total.append(rmse(error))
 
             row_to_write = row.model_params.params_list()
@@ -94,3 +103,7 @@ def rmse(vars):
 
 
 optimize()
+# grid_rmse()
+
+# print(rmse(fake.output(params=grid.rows[296].model_params)))
+# print(fake.output(params=grid.rows[296].model_params))
