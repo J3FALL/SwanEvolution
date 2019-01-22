@@ -20,7 +20,7 @@ from src.swan.files import ObservationFile
 
 grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-fake = FakeModel(grid_file=grid, forecasts_path='../../samples/wind-noice-runs/results_fixed/15/', noise_run=15)
+fake = FakeModel(grid_file=grid, forecasts_path='../../../wind-noice-runs/results_fixed/0/', noise_run=0)
 
 
 def optimize():

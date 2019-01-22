@@ -51,8 +51,8 @@ def plot_population_movement(pop, model):
         for wcr_idx in range(len(model.grid_file.wcr_grid)):
             forecasts = model.grid[drag_idx, 1, wcr_idx, 0]
             rmse = \
-                sqrt(pow(model.error(forecasts[0]), 2) + pow(model.error(forecasts[1]), 2) +
-                     pow(model.error(forecasts[2]), 2))
+                sqrt(pow(model.error_rmse_peak(forecasts[0]), 2) + pow(model.error_rmse_peak(forecasts[1]), 2) +
+                     pow(model.error_rmse_peak(forecasts[2]), 2))
 
             points.append([model.grid_file.drag_grid[drag_idx], model.grid_file.wcr_grid[wcr_idx], rmse])
             x[drag_idx] = model.grid_file.drag_grid[drag_idx]
