@@ -5,6 +5,7 @@ from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
 
+from src.noice_experiments.errors import error_rmse_peak
 from src.noice_experiments.evo_operators import (
     calculate_objectives,
     crossover,
@@ -20,7 +21,8 @@ from src.swan.files import ObservationFile
 
 grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-fake = FakeModel(grid_file=grid, forecasts_path='../../../wind-noice-runs/results_fixed/0/', noise_run=0)
+fake = FakeModel(grid_file=grid, error=error_rmse_peak,
+                 forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
 
 def optimize():
@@ -39,9 +41,6 @@ def optimize():
             drf_idx, cfw_idx, stpm_idx = fake.params_idxs(row.model_params)
             forecasts = fake.grid[drf_idx, cfw_idx, stpm_idx]
             print("index : %d" % grid.rows.index(row))
-
-    # drf_idx, cfw_idx, stpm_idx = fake.params_idxs(grid.rows[296].model_params)
-    # forecasts = fake.grid[drf_idx, cfw_idx, stpm_idx]
 
     waves_1 = ObservationFile(path="../../samples/obs/1a_waves.txt").time_series(from_date="20140814.120000",
                                                                                  to_date="20140915.000000")

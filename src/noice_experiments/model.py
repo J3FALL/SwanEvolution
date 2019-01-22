@@ -2,7 +2,6 @@ import csv
 import os
 import random
 from collections import Counter
-from math import sqrt
 
 import numpy as np
 
@@ -44,8 +43,16 @@ class SWANParams:
 
 
 class FakeModel:
-    def __init__(self, grid_file, forecasts_path, noise_run):
+    def __init__(self, grid_file, error, forecasts_path, noise_run):
+        '''
+        :param grid_file: Path to grid file
+        :param error: Error metrics to evaluate (forecasts - observations)
+        :param forecasts_path: Path to directory with forecast files
+        :param noise_run: Index of noise case (corresponds to name of forecasts directory)
+        '''
+
         self.grid_file = grid_file
+        self.error = error
         self.observations = observations_from_files()
         self.forecasts_path = forecasts_path
         self.noise_run = noise_run
@@ -100,37 +107,14 @@ class FakeModel:
 
     def output(self, params):
         drf_idx, cfw_idx, stpm_idx = self.params_idxs(params=params)
-        return [self.error_rmse_peak(forecast) for forecast in self.grid[drf_idx, cfw_idx, stpm_idx]]
 
-    def error_rmse_all(self, forecast):
-        '''
-        Calculate RMSE of between forecasts and observations for corresponding station
-        :param forecast: Forecast object
-        '''
+        forecasts = [forecast for forecast in self.grid[drf_idx, cfw_idx, stpm_idx]]
 
-        observation = self.observations[forecast.station_idx]
-        result = 0.0
-        for pred, obs in zip(forecast.hsig_series, observation):
-            result += pow(pred - obs, 2)
+        out = []
+        for forecast, observation in zip(forecasts, self.observations):
+            out.append(self.error(forecast, observation))
 
-        return sqrt(result / len(observation))
-
-    def error_rmse_peak(self, forecast):
-        '''
-        Calculate peakwise RMSE of between forecasts and observations for corresponding station
-        :param forecast: Forecast object
-        '''
-
-        observation = self.observations[forecast.station_idx]
-        observation_peaks = [obs if obs > 1 else 1 for obs in observation]
-
-        forcasts_peaks = [fk if fk > 1 else 1 for fk in forecast.hsig_series]
-
-        result = 0.0
-        for pred, obs in zip(forcasts_peaks, observation_peaks):
-            result += pow(pred - obs, 2)
-
-        return sqrt(result / len(observation_peaks))
+        return out
 
     class Forecast:
         def __init__(self, station_idx, forecast_file):
