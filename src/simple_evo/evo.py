@@ -173,7 +173,7 @@ class SPEA2:
     def environmental_selection(self, pop, archive):
         union = archive + pop
         # TODO: check value of fitness for union
-        env = [p for p in union if p.fitness() < 15.0]
+        env = [p for p in union if p.fitness() < 1.0]
 
         if len(env) < self.params.archive_size:
             # print("adding")
@@ -183,7 +183,7 @@ class SPEA2:
                 if len(env) >= self.params.archive_size:
                     break
                 # TODO: check value of fitness for union
-                if p.fitness() >= 15.0:
+                if p.fitness() >= 1.0:
                     env.append(p)
         elif len(env) > self.params.archive_size:
             while True:
@@ -252,4 +252,4 @@ def rmse(individ):
     result = 0.0
     for obj in individ.objectives:
         result += pow(obj, 2)
-    return sqrt(result)
+    return sqrt(result / len(individ.objectives))
