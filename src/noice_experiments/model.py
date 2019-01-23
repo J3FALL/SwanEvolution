@@ -11,8 +11,7 @@ from src.noice_experiments.noisy_wind_files import (
     extracted_forecast_params
 )
 from src.swan.files import (
-    ForecastFile,
-    ObservationFile
+    ForecastFile
 )
 
 drf_range = [0.2, 0.4, 0.6000000000000001, 0.8, 1.0, 1.2, 1.4, 1.5999999999999999, 1.7999999999999998,
@@ -43,7 +42,7 @@ class SWANParams:
 
 
 class FakeModel:
-    def __init__(self, grid_file, error, forecasts_path, noise_run):
+    def __init__(self, grid_file, error, observations, stations_to_out, forecasts_path, noise_run):
         '''
         :param grid_file: Path to grid file
         :param error: Error metrics to evaluate (forecasts - observations)
@@ -53,7 +52,8 @@ class FakeModel:
 
         self.grid_file = grid_file
         self.error = error
-        self.observations = observations_from_files()
+        self.observations = observations
+        self.stations = stations_to_out
         self.forecasts_path = forecasts_path
         self.noise_run = noise_run
         self._init_grids()
@@ -63,7 +63,7 @@ class FakeModel:
 
         files = forecast_files_from_dir(self.forecasts_path)
 
-        stations = files_by_stations(files, noise_run=self.noise_run)
+        stations = files_by_stations(files, noise_run=self.noise_run, stations=[str(st) for st in self.stations])
 
         files_by_run_idx = dict()
 
@@ -79,8 +79,8 @@ class FakeModel:
             forecasts_files = sorted([key for key in files_by_run_idx.keys() if files_by_run_idx[key] == run_idx])
 
             forecasts = []
-            for station_idx, file_name in enumerate(forecasts_files):
-                forecasts.append(FakeModel.Forecast(station_idx, ForecastFile(path=file_name)))
+            for idx, file_name in enumerate(forecasts_files):
+                forecasts.append(FakeModel.Forecast(self.stations[idx], ForecastFile(path=file_name)))
 
             drf_idx, cfw_idx, stpm_idx = self.params_idxs(row.model_params)
             self.grid[drf_idx, cfw_idx, stpm_idx] = forecasts
@@ -165,13 +165,3 @@ class CSVGridRow:
 def unique_values(values):
     cnt = Counter(values)
     return list(cnt.keys())
-
-
-def observations_from_files():
-    return [ObservationFile(path="../../samples/obs/1a_waves.txt").time_series(from_date="20140814.120000",
-                                                                               to_date="20140915.000000"),
-            ObservationFile(path="../../samples/obs/2a_waves.txt").time_series(from_date="20140814.120000",
-                                                                               to_date="20140915.000000"),
-            ObservationFile(path="../../samples/obs/3a_waves.txt").time_series(from_date="20140814.120000",
-                                                                               to_date="20140915.000000")
-            ]
