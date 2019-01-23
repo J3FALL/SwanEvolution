@@ -1,5 +1,6 @@
 import csv
 import os
+import re
 from datetime import datetime
 
 
@@ -69,8 +70,11 @@ class FormattedDate:
 
 
 class WaveWatchObservationFile:
+    FILE_PATTERN = 'obs_fromww_([1-9]).csv'
+
     def __init__(self, path):
         self.path = path
+        self.station_idx = self._parsed_station()
 
     def time_series(self):
         with open(os.path.join(os.path.dirname(__file__), self.path), newline='') as csvfile:
@@ -79,7 +83,11 @@ class WaveWatchObservationFile:
 
             return results
 
+    def _parsed_station(self):
+        _, name = os.path.split(self.path)
+        p = re.compile(WaveWatchObservationFile.FILE_PATTERN)
+        match = p.search(name)
 
-ww3_file = WaveWatchObservationFile(path='../../samples/ww-res/obs_fromww_1.csv')
+        return match.groups()[0]
 
-print(ww3_file.time_series())
+# ww3_file = WaveWatchObservationFile(path='../../samples/ww-res/obs_fromww_1.csv')

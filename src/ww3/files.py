@@ -18,12 +18,13 @@ def wave_watch_results(path_to_results=PATH_TO_WW3_RESULTS, stations=None):
     choice = '|'.join([str(station) for station in stations])
     file_pattern = f'obs_fromww_({choice}).csv'
 
-    results = []
+    files = []
     for file in glob.iglob(os.path.join(path_to_results, '*.csv')):
         if re.search(file_pattern, file):
-            results.append(WaveWatchObservationFile(path=file))
+            files.append(file)
 
-    return results
+    result = [WaveWatchObservationFile(file) for file in sorted(files)]
+    return result
 
 
-ww3_obs = wave_watch_results(path_to_results=PATH_TO_WW3_RESULTS, stations=[1])
+ww3_obs = wave_watch_results(path_to_results=PATH_TO_WW3_RESULTS, stations=[3, 4, 2])
