@@ -14,8 +14,7 @@ def calculate_objectives(model, pop):
         params = p.genotype
         closest = model.closest_params(params)
         params.update(drf=closest[0], cfw=closest[1], stpm=closest[2])
-        obj_station1, obj_station2, obj_station3 = model.output(params=params)
-        p.objectives = (obj_station1, obj_station2, obj_station3)
+        p.objectives = tuple(model.output(params=params))
 
 
 def crossover(p1, p2, rate):
