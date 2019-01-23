@@ -22,9 +22,10 @@ def error_rmse_peak(forecast, observations):
     :param observations: ObservationFile object
     '''
 
-    observation_peaks = [obs if obs > 1 else 1 for obs in observations]
+    peak_thr=0.25
+    observation_peaks = [obs if obs > peak_thr else peak_thr for obs in observations]
 
-    forcasts_peaks = [fk if fk > 1 else 1 for fk in forecast.hsig_series]
+    forcasts_peaks = [fk if fk > peak_thr else peak_thr for fk in forecast.hsig_series]
 
     result = 0.0
     for pred, obs in zip(forcasts_peaks, observation_peaks):

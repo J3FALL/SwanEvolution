@@ -61,12 +61,12 @@ def optimize_by_real_obs():
 def optimize_by_ww3_obs():
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-    stations = [1, 5, 7]
+    stations = [1,2,3,4,5,6,7,8,9]
 
     ww3_obs = \
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
 
-    fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
+    fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_peak,
                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
     history = SPEA2(
@@ -93,16 +93,16 @@ def optimize_by_ww3_obs():
 
 
 def plot_results(forecasts, observations, optimization_history):
-    assert len(observations) == len(forecasts) == 3
+    #assert len(observations) == len(forecasts) == 3
 
-    fig, axs = plt.subplots(2, 2)
+    fig, axs = plt.subplots(3, 3)
     time = np.linspace(1, 253, num=len(forecasts[0].hsig_series))
 
     obs_series = []
     for obs in observations:
         obs_series.append(obs.time_series(from_date="20140814.120000", to_date="20140915.000000")[:len(time)])
     for idx in range(len(forecasts)):
-        i, j = divmod(idx, 2)
+        i, j = divmod(idx, 3)
         station_idx = observations[idx].station_idx
         axs[i, j].plot(time, obs_series[idx],
                        label=f'Observations, Station {station_idx}')
@@ -113,18 +113,30 @@ def plot_results(forecasts, observations, optimization_history):
     gens = [error.genotype_index for error in optimization_history.history]
     error_vals = [error.error_value for error in optimization_history.history]
 
-    axs[1, 1].plot()
-    axs[1, 1].plot(gens, error_vals, label='Loss history', marker=".")
-    axs[1, 1].legend()
+    #axs[1, 1].plot()
+    #axs[1, 1].plot(gens, error_vals, label='Loss history', marker=".")
+    #axs[1, 1].legend()
 
     plt.show()
 
 
 def grid_rmse():
-    fake, grid = real_obs_config()
+    #fake, grid = real_obs_config()
+
+    grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
+
+    stations = [1, 2, 3]
+
+    ww3_obs = \
+        [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
+
+    fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_peak,
+                     forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+
+
     errors_total = []
     m_error = pow(10, 9)
-    with open('params_rmse.csv', mode='w', newline='') as csv_file:
+    with open('../../samples/params_rmse.csv', mode='w', newline='') as csv_file:
         writer = csv.writer(csv_file, delimiter=',')
         writer.writerow(['ID', 'DRF', 'CFW', 'STPM', 'RMSE_K1', 'RMSE_K2', 'RMSE_K3', 'TOTAL_RMSE'])
         for row in grid.rows:
@@ -149,4 +161,6 @@ def rmse(vars):
 
 
 optimize_by_ww3_obs()
-# optimize_by_real_obs()
+#optimize_by_real_obs()
+
+#grid_rmse()
