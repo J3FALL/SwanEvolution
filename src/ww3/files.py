@@ -27,4 +27,4 @@ def wave_watch_results(path_to_results=PATH_TO_WW3_RESULTS, stations=None):
     return result
 
 
-ww3_obs = wave_watch_results(path_to_results=PATH_TO_WW3_RESULTS, stations=[3, 4, 2])
+ww3_obs = wave_watch_results(path_to_results=PATH_TO_WW3_RESULTS, stations=[4, 5, 6])
