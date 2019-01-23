@@ -28,9 +28,9 @@ def is_valid(forecast_file, expected_station, expected_noise_run):
     return True if actual_station == expected_station and actual_noise_run == expected_noise_run else False
 
 
-def files_by_stations(files, noise_run):
+def files_by_stations(files, noise_run, stations):
     groups = []
-    for station in ['1', '2', '3']:
+    for station in stations:
         groups.append(
             [file for file in files if is_valid(file, expected_station=station, expected_noise_run=str(noise_run))])
 
@@ -39,5 +39,5 @@ def files_by_stations(files, noise_run):
 
 files = forecast_files_from_dir('../../samples/wind-noice-runs/results/1/')
 
-groups = files_by_stations(files, noise_run=1)
+groups = files_by_stations(files, noise_run=1, stations=['1', '2', '3'])
 print(groups)

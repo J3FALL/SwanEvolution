@@ -1,10 +1,13 @@
+import csv
 import os
+import re
 from datetime import datetime
 
 
 class ObservationFile:
-    def __init__(self, path):
+    def __init__(self, path, station_idx):
         self.path = path
+        self.station_idx = station_idx
 
     def time_series(self, from_date="", to_date=""):
         '''
@@ -65,3 +68,39 @@ class FormattedDate:
     def target(self, date, time):
         return datetime.strptime(" ".join([date, time]), self._source_date_pattern).strftime(
             self._target_date_pattern) + self._target_suffix
+
+
+class WaveWatchObservationFile:
+    FILE_PATTERN = 'obs_fromww_([1-9]).csv'
+
+    def __init__(self, path):
+        self.path = path
+        self.station_idx = self._parsed_station()
+
+    def time_series(self, **kwargs):
+        with open(os.path.join(os.path.dirname(__file__), self.path), newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            results = [float(row['hs']) for row in reader]
+
+            return results
+
+    def _parsed_station(self):
+        _, name = os.path.split(self.path)
+        p = re.compile(WaveWatchObservationFile.FILE_PATTERN)
+        match = p.search(name)
+
+        return match.groups()[0]
+
+
+def real_obs_from_files():
+    files = ["../../samples/obs/1a_waves.txt", "../../samples/obs/2a_waves.txt",
+             "../../samples/obs/3a_waves.txt"]
+    observations = []
+
+    for station_idx, file in enumerate(files, 0):
+        observations.append(ObservationFile(path=file, station_idx=station_idx))
+        # observations.append(obs.time_series(from_date="20140814.120000", to_date="20140915.000000"))
+
+    return observations
+
+# ww3_file = WaveWatchObservationFile(path='../../samples/ww-res/obs_fromww_1.csv')
