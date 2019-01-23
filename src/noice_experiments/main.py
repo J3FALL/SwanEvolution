@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from src.noice_experiments.errors import (
-    error_rmse_peak,
-    error_rmse_all
+    error_rmse_peak
 )
 from src.noice_experiments.evo_operators import (
     calculate_objectives,
@@ -61,7 +60,7 @@ def optimize_by_real_obs():
 def optimize_by_ww3_obs():
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-    stations = [1,2,3,4,5,6,7,8,9]
+    stations = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     ww3_obs = \
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
@@ -93,7 +92,7 @@ def optimize_by_ww3_obs():
 
 
 def plot_results(forecasts, observations, optimization_history):
-    #assert len(observations) == len(forecasts) == 3
+    # assert len(observations) == len(forecasts) == 3
 
     fig, axs = plt.subplots(3, 3)
     time = np.linspace(1, 253, num=len(forecasts[0].hsig_series))
@@ -113,15 +112,15 @@ def plot_results(forecasts, observations, optimization_history):
     gens = [error.genotype_index for error in optimization_history.history]
     error_vals = [error.error_value for error in optimization_history.history]
 
-    #axs[1, 1].plot()
-    #axs[1, 1].plot(gens, error_vals, label='Loss history', marker=".")
-    #axs[1, 1].legend()
+    # axs[1, 1].plot()
+    # axs[1, 1].plot(gens, error_vals, label='Loss history', marker=".")
+    # axs[1, 1].legend()
 
     plt.show()
 
 
 def grid_rmse():
-    #fake, grid = real_obs_config()
+    # fake, grid = real_obs_config()
 
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
@@ -132,7 +131,6 @@ def grid_rmse():
 
     fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_peak,
                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
-
 
     errors_total = []
     m_error = pow(10, 9)
@@ -161,6 +159,6 @@ def rmse(vars):
 
 
 optimize_by_ww3_obs()
-#optimize_by_real_obs()
+# optimize_by_real_obs()
 
-#grid_rmse()
+# grid_rmse()
