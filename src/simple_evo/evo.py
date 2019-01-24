@@ -101,8 +101,8 @@ class SPEA2:
             last_fit = history.last().fitness_value
             if last_fit > best.fitness():
                 best_gens = best.genotype
-                print("new best: ", best.fitness(), best.objectives,
-                      rmse(best))
+                print("new best: ", round(best.fitness(),5), round(best.genotype.drf,2),round(best.genotype.cfw,6),round(best.genotype.stpm,6),
+                      round(rmse(best),4))
                 print(gen)
                 history.add_new(best_gens, gen, best.fitness(),
                                 rmse(best))

@@ -17,6 +17,18 @@ def calculate_objectives(model, pop):
         p.objectives = tuple(model.output(params=params))
 
 
+def calculate_objectives_interp(model, pop):
+    '''
+    Calculate two error functions i.e. |model_out - observation| ^ 2
+    :param model: Class that can generate SWAN-like output for a given params
+    :param pop: Population of SWAN-params i.e. individuals
+    '''
+
+    for p in pop:
+        params = p.genotype
+        p.objectives = tuple(model.output(params=params))
+
+
 def crossover(p1, p2, rate):
     if random.random() >= rate:
         return p1

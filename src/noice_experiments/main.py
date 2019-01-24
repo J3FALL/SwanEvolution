@@ -11,6 +11,7 @@ from src.noice_experiments.errors import (
 )
 from src.noice_experiments.evo_operators import (
     calculate_objectives,
+    calculate_objectives_interp,
     crossover,
     mutation
 )
@@ -41,7 +42,7 @@ def optimize_by_real_obs():
     history = SPEA2(
         params=SPEA2.Params(max_gens=1000, pop_size=10, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
         new_individ=SWANParams.new_instance,
-        objectives=partial(calculate_objectives, fake_model),
+        objectives=partial(calculate_objectives_interp, fake_model),
         crossover=crossover,
         mutation=mutation).solution()
 
@@ -61,7 +62,7 @@ def optimize_by_real_obs():
 def optimize_by_ww3_obs():
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-    stations = [1,2,3,4,5,6,7,8,9]
+    stations = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     ww3_obs = \
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
@@ -72,7 +73,7 @@ def optimize_by_ww3_obs():
     history = SPEA2(
         params=SPEA2.Params(max_gens=100, pop_size=50, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
         new_individ=SWANParams.new_instance,
-        objectives=partial(calculate_objectives, fake),
+        objectives=partial(calculate_objectives_interp, fake),
         crossover=crossover,
         mutation=mutation).solution()
 
@@ -80,8 +81,16 @@ def optimize_by_ww3_obs():
 
     forecasts = []
     for row in grid.rows:
-        if set(row.model_params.params_list()) == set(params.params_list()):
-            drf_idx, cfw_idx, stpm_idx = fake.params_idxs(row.model_params)
+
+        # find clostst forecast from pre-simulated data
+        closest_row = fake.closest_params(row.model_params)
+        closest_params_set_row = SWANParams(drf=closest_row[0], cfw=closest_row[1], stpm=closest_row[2])
+
+        closest_hist = fake.closest_params(params)
+        closest_params_set_hist = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
+
+        if set(closest_params_set_row.params_list()) == set(closest_params_set_hist.params_list()):
+            drf_idx, cfw_idx, stpm_idx = fake.params_idxs(closest_params_set_row)
             forecasts = fake.grid[drf_idx, cfw_idx, stpm_idx]
             print("index : %d" % grid.rows.index(row))
 
@@ -93,7 +102,7 @@ def optimize_by_ww3_obs():
 
 
 def plot_results(forecasts, observations, optimization_history):
-    #assert len(observations) == len(forecasts) == 3
+    # assert len(observations) == len(forecasts) == 3
 
     fig, axs = plt.subplots(3, 3)
     time = np.linspace(1, 253, num=len(forecasts[0].hsig_series))
@@ -113,15 +122,15 @@ def plot_results(forecasts, observations, optimization_history):
     gens = [error.genotype_index for error in optimization_history.history]
     error_vals = [error.error_value for error in optimization_history.history]
 
-    #axs[1, 1].plot()
-    #axs[1, 1].plot(gens, error_vals, label='Loss history', marker=".")
-    #axs[1, 1].legend()
+    # axs[1, 1].plot()
+    # axs[1, 1].plot(gens, error_vals, label='Loss history', marker=".")
+    # axs[1, 1].legend()
 
     plt.show()
 
 
 def grid_rmse():
-    #fake, grid = real_obs_config()
+    # fake, grid = real_obs_config()
 
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
@@ -132,7 +141,6 @@ def grid_rmse():
 
     fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_peak,
                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
-
 
     errors_total = []
     m_error = pow(10, 9)
@@ -160,7 +168,8 @@ def rmse(vars):
     return sqrt(sum([pow(v, 2) for v in vars]) / len(vars))
 
 
-optimize_by_ww3_obs()
-#optimize_by_real_obs()
+history = optimize_by_ww3_obs()
+history
+# optimize_by_real_obs()
 
-#grid_rmse()
+# grid_rmse()
