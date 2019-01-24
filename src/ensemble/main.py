@@ -45,7 +45,10 @@ def optimize():
         if set(row.model_params.params_list()) == set(params.params_list()):
             drf_idx, cfw_idx, stpm_idx = base_model.params_idxs(row.model_params)
             forecasts = base_model.grid[drf_idx, cfw_idx, stpm_idx]
-    # print(base_model.output(params))
+
+    drf, cfw, stpm = base_model.closest_params(params)
+    print(params.params_list())
+    print(base_model.output(params=SWANParams(drf=drf, cfw=cfw, stpm=stpm)))
     observations = real_obs_from_files()
     plot_results(forecasts=forecasts, observations=observations)
 
