@@ -158,7 +158,7 @@ def rmse(vars):
     return sqrt(sum([pow(v, 2) for v in vars]) / len(vars))
 
 
-optimize_by_ww3_obs()
+# optimize_by_ww3_obs()
 # optimize_by_real_obs()
 
 # grid_rmse()
