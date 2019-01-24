@@ -2,9 +2,10 @@ import os
 
 import numpy as np
 
-from src.noice_experiments.errors import error_rmse_all
+from src.noice_experiments.errors import error_rmse_peak
 from src.noice_experiments.model import (
-    FakeModel
+    FakeModel,
+    SWANParams
 )
 
 
@@ -30,13 +31,14 @@ class Ensemble:
         models = []
         for noise in noise_cases:
             models.append(FakeModel(grid_file=self.grid, observations=self.observations,
-                                    stations_to_out=self.stations_to_out, error=error_rmse_all,
+                                    stations_to_out=self.stations_to_out, error=error_rmse_peak,
                                     forecasts_path=os.path.join(self.forecasts_dir, str(noise)), noise_run=noise))
 
         return models
 
     def output(self, params):
-        predictions = [model.output(params) for model in self.models]
+        drf, cfw, stpm = self.closest_params(params)
+        predictions = [model.output(params=SWANParams(drf=drf, cfw=cfw, stpm=stpm)) for model in self.models]
 
         statistics_by_stations = {}
         for station_idx in range(len(self.stations_to_out)):
