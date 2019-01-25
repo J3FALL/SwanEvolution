@@ -31,8 +31,8 @@ def optimize():
                    path_to_forecasts='../../../wind-noice-runs/results_fixed',
                    stations_to_out=[1, 2, 3])
 
-    history = SPEA2(
-        params=SPEA2.Params(max_gens=50, pop_size=50, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
+    history, _ = SPEA2(
+        params=SPEA2.Params(max_gens=150, pop_size=10, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives, ens),
         crossover=crossover,
