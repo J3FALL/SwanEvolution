@@ -1,3 +1,4 @@
+import copy
 import os
 import random
 from datetime import datetime
@@ -79,23 +80,22 @@ class SPEA2:
             self.history = []
 
         def add_new(self, genotype, genotype_index, fitness, error):
-            self.history.append(SPEA2.ErrorHistory.Point(genotype=genotype, genotype_index=genotype_index,
-                                                         fitness_value=fitness, error_value=error))
+            self.history.append(
+                SPEA2.ErrorHistory.Point(genotype=copy.deepcopy(genotype), genotype_index=genotype_index,
+                                         fitness_value=fitness, error_value=error))
 
         def last(self):
             return SPEA2.ErrorHistory.Point() if len(self.history) == 0 else self.history[-1]
 
     def solution(self):
-        fits = []
+        archive_history = []
         history = SPEA2.ErrorHistory()
+
         gen = 0
         while gen < self.params.max_gens:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
-            # plot_population_movement(pop=self._pop, model=fake)
-
-            fits.append([rmse(p) for p in
-                         self._archive])
+            archive_history.append(self._archive)
 
             best = sorted(self._archive, key=lambda p: p.fitness())[0]
             last_fit = history.last().fitness_value
@@ -110,7 +110,7 @@ class SPEA2:
             self._pop = self.reproduce(selected, self.params.pop_size)
             gen += 1
 
-        return history
+        return history, archive_history
 
     def fitness(self):
         self.objectives(self._pop)
