@@ -2,16 +2,14 @@ import os
 
 import numpy as np
 
-from src.noice_experiments.errors import error_rmse_peak
 from src.noice_experiments.model import (
-    FakeModel,
-    SWANParams
+    FakeModel
 )
 
 
 class Ensemble:
     # TODO: add error function as param?
-    def __init__(self, grid, noise_cases, observations, path_to_forecasts, stations_to_out):
+    def __init__(self, grid, noise_cases, observations, path_to_forecasts, stations_to_out, error):
         '''
         Initialize an ensemble of FakeModels
         :param grid: CSVGridFile object with grid of model parameters
@@ -25,20 +23,20 @@ class Ensemble:
         self.observations = observations
         self.forecasts_dir = path_to_forecasts
         self.stations_to_out = stations_to_out
+        self.error = error
         self.models = self._initialized_models(noise_cases=noise_cases)
 
     def _initialized_models(self, noise_cases):
         models = []
         for noise in noise_cases:
             models.append(FakeModel(grid_file=self.grid, observations=self.observations,
-                                    stations_to_out=self.stations_to_out, error=error_rmse_peak,
+                                    stations_to_out=self.stations_to_out, error=self.error,
                                     forecasts_path=os.path.join(self.forecasts_dir, str(noise)), noise_run=noise))
 
         return models
 
     def output(self, params):
-        drf, cfw, stpm = self.closest_params(params)
-        predictions = [model.output(params=SWANParams(drf=drf, cfw=cfw, stpm=stpm)) for model in self.models]
+        predictions = [model.output(params=params) for model in self.models]
 
         statistics_by_stations = {}
         for station_idx in range(len(self.stations_to_out)):

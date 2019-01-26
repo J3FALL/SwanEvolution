@@ -96,7 +96,7 @@ class FakeModel:
 
         # calc fitness for every point
 
-        grid_file_path = f'../grid-saved-rmse.pik_{self.noise_run}'
+        grid_file_path = f'../grid-saved-rmse_{self.noise_run}.pik'
 
         if not os.path.isfile(grid_file_path):
             for i in range(0, self.grid.shape[0]):
