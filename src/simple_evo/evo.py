@@ -1,24 +1,10 @@
-import os
+import copy
 import random
 from datetime import datetime
 from math import sqrt
 from operator import itemgetter
 
-import yaml
-
 random.seed(datetime.now())
-
-
-class EvoConfig:
-    def __init__(self):
-        self.content = self._load()
-
-    def _load(self):
-        with open(os.path.join(os.path.dirname(__file__), "../../evo-config.yaml"), 'r') as stream:
-            return yaml.load(stream)
-
-    def grid_by_name(self, name):
-        return self.content['grid'][name]
 
 
 class SPEA2:
@@ -79,23 +65,22 @@ class SPEA2:
             self.history = []
 
         def add_new(self, genotype, genotype_index, fitness, error):
-            self.history.append(SPEA2.ErrorHistory.Point(genotype=genotype, genotype_index=genotype_index,
-                                                         fitness_value=fitness, error_value=error))
+            self.history.append(
+                SPEA2.ErrorHistory.Point(genotype=copy.deepcopy(genotype), genotype_index=genotype_index,
+                                         fitness_value=fitness, error_value=error))
 
         def last(self):
             return SPEA2.ErrorHistory.Point() if len(self.history) == 0 else self.history[-1]
 
     def solution(self):
-        fits = []
+        archive_history = []
         history = SPEA2.ErrorHistory()
+
         gen = 0
         while gen < self.params.max_gens:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
-            # plot_population_movement(pop=self._pop, model=fake)
-
-            fits.append([rmse(p) for p in
-                         self._archive])
+            archive_history.append(self._archive)
 
             best = sorted(self._archive, key=lambda p: p.fitness())[0]
             last_fit = history.last().fitness_value
@@ -110,7 +95,7 @@ class SPEA2:
             self._pop = self.reproduce(selected, self.params.pop_size)
             gen += 1
 
-        return history
+        return history, archive_history
 
     def fitness(self):
         self.objectives(self._pop)
@@ -120,9 +105,6 @@ class SPEA2:
         for p in union:
             p.raw_fitness = self.calculate_raw_fitness(p, union)
             p.density = self.calculate_density(p, union)
-            # print(p.raw_fitness, p.density, p.objectives)
-
-            # plot_pareto(self._pop)
 
     def calculate_dominated(self, pop):
         '''
@@ -176,7 +158,6 @@ class SPEA2:
         env = [p for p in union if p.fitness() < 1.0]
 
         if len(env) < self.params.archive_size:
-            # print("adding")
             # Fill the archive with the remaining candidate solutions
             union.sort(key=lambda p: p.fitness())
             for p in union:
@@ -187,7 +168,6 @@ class SPEA2:
                     env.append(p)
         elif len(env) > self.params.archive_size:
             while True:
-                # print("truncate")
                 # Truncate the archive population
                 k = int(sqrt(len(env)))
                 # k = 1

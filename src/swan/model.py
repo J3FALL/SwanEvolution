@@ -17,6 +17,8 @@ wcr_range = [4.425e-10, 8.85e-10, 1.3275e-09, 4.425e-09, 8.85e-09, 1.3275e-08, 4
              0.013275000000000002, 0.04425, 0.0885, 0.13275, 0.4425, 0.885, 1.3274999999999997]
 
 
+# TODO: remove this, old version ?
+
 class SWANParams:
     @staticmethod
     def new_instance():
