@@ -1,4 +1,3 @@
-import csv
 from functools import partial
 
 import numpy as np
@@ -35,8 +34,8 @@ def optimize_by_real_obs():
                            forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
     history, archive_history = SPEA2(
-        params=SPEA2.Params(max_gens=50, pop_size=10, archive_size=5,
-                            crossover_rate=0.8, mutation_rate=0.8, mutation_value_rate=2),
+        params=SPEA2.Params(max_gens=100, pop_size=10, archive_size=5,
+                            crossover_rate=0.8, mutation_rate=0.6, mutation_value_rate=[0.1, 0.005, 0.005]),
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives_interp, fake_model),
         crossover=crossover,
@@ -183,10 +182,10 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
 
 
 # optimize_by_real_obs()
-#optimize_by_ww3_obs(28, 20, 6, 0.7, 0.7, [0.1, 0.005, 0.005])
+optimize_by_ww3_obs(28, 20, 6, 0.7, 0.7, [0.1, 0.005, 0.005])
 
-f = run_robustess_exp(28, 20, 6, 0.7, 0.7, [0.1, 0.005, 0.005])
-print("META FINTESS")
-print(f)
+# f = run_robustess_exp(28, 20, 6, 0.7, 0.7, [0.1, 0.005, 0.005])
+# print("META FINTESS")
+# print(f)
 #
 # f = run_robustess_exp(28, 20, 6, 0.67, 0.17)

@@ -4,7 +4,7 @@ from src.ensemble.ensemble import Ensemble
 from src.evolution.spea2 import SPEA2
 from src.noice_experiments.errors import error_rmse_all
 from src.noice_experiments.evo_operators import (
-    calculate_objectives,
+    calculate_objectives_interp,
     crossover,
     mutation
 )
@@ -27,27 +27,29 @@ def optimize():
 
     ens = Ensemble(grid=grid, noise_cases=[1, 15, 25, 26], observations=obs,
                    path_to_forecasts='../../../wind-noice-runs/results_fixed',
-                   stations_to_out=[1, 2, 3])
+                   stations_to_out=[1, 2, 3], error=error_rmse_all)
 
     history, _ = SPEA2(
-        params=SPEA2.Params(max_gens=150, pop_size=10, archive_size=5,
+        params=SPEA2.Params(max_gens=100, pop_size=10, archive_size=5,
                             crossover_rate=0.8, mutation_rate=0.8, mutation_value_rate=[0.1, 0.005, 0.005]),
         new_individ=SWANParams.new_instance,
-        objectives=partial(calculate_objectives, ens),
+        objectives=partial(calculate_objectives_interp, ens),
         crossover=crossover,
         mutation=mutation).solution()
 
     params = history.last().genotype
 
+    closest_hist = base_model.closest_params(params)
+    closest_params_set_hist = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
+
     forecasts = []
     for row in grid.rows:
-        if set(row.model_params.params_list()) == set(params.params_list()):
+        if set(row.model_params.params_list()) == set(closest_params_set_hist.params_list()):
             drf_idx, cfw_idx, stpm_idx = base_model.params_idxs(row.model_params)
             forecasts = base_model.grid[drf_idx, cfw_idx, stpm_idx]
 
-    drf, cfw, stpm = base_model.closest_params(params)
     print(params.params_list())
-    print(base_model.output(params=SWANParams(drf=drf, cfw=cfw, stpm=stpm)))
+    print(base_model.output(params=params))
     observations = real_obs_from_files()
     plot_results(forecasts=forecasts, observations=observations)
 

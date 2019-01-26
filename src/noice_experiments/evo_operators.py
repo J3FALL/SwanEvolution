@@ -1,5 +1,7 @@
 import random
+
 import numpy as np
+
 from src.noice_experiments.model import SWANParams
 
 
@@ -31,7 +33,7 @@ def calculate_objectives_interp(model, pop):
 
 def crossover(p1, p2, rate):
     if random.random() >= rate:
-       return p1
+        return p1
 
     params = ['drf', 'cfw', 'stpm']
     param_to_mutate = params[random.randint(0, 2)]
@@ -61,7 +63,7 @@ def mutation(individ, rate, mutation_value_rate):
 
         sign = 1 if random.random() < 0.5 else -1
         if param_to_mutate is 'drf':
-            individ.drf += sign *  mutation_value_rate[0] * mutation_ratio
+            individ.drf += sign * mutation_value_rate[0] * mutation_ratio
             individ.drf = abs(individ.drf)
         if param_to_mutate is 'cfw':
             individ.cfw += sign * mutation_value_rate[1] * mutation_ratio
