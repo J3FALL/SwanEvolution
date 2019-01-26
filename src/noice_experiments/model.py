@@ -12,7 +12,7 @@ from src.noice_experiments.noisy_wind_files import (
     forecast_files_from_dir,
     extracted_forecast_params
 )
-from src.swan.files import (
+from src.utils.files import (
     ForecastFile
 )
 

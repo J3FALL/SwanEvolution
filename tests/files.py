@@ -1,7 +1,7 @@
 import unittest
 
-from src.simple_evo.files import ForecastFile
-from src.simple_evo.files import ObservationFile
+from src.evolution.files import ForecastFile
+from src.evolution.files import ObservationFile
 
 
 class ObservationFileTest(unittest.TestCase):
