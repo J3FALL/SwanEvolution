@@ -30,7 +30,8 @@ def optimize():
                    stations_to_out=[1, 2, 3])
 
     history, _ = SPEA2(
-        params=SPEA2.Params(max_gens=150, pop_size=10, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
+        params=SPEA2.Params(max_gens=150, pop_size=10, archive_size=5,
+                            crossover_rate=0.8, mutation_rate=0.8, mutation_value_rate=2),
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives, ens),
         crossover=crossover,

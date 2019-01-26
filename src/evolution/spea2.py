@@ -33,12 +33,13 @@ class SPEA2:
         self._archive = []
 
     class Params:
-        def __init__(self, max_gens, pop_size, archive_size, crossover_rate, mutation_rate):
+        def __init__(self, max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate):
             self.max_gens = max_gens
             self.pop_size = pop_size
             self.archive_size = archive_size
             self.crossover_rate = crossover_rate
             self.mutation_rate = mutation_rate
+            self.mutation_value_rate = mutation_value_rate
 
     class Individ:
         def __init__(self, genotype):
@@ -224,7 +225,7 @@ class SPEA2:
                 p2 = selected[0]
 
             child_gen = self.crossover(p1.genotype, p2.genotype, self.params.crossover_rate)
-            child_gen = self.mutation(child_gen, self.params.mutation_rate)
+            child_gen = self.mutation(child_gen, self.params.mutation_rate, self.params.mutation_value_rate)
             child = SPEA2.Individ(genotype=child_gen)
             children.append(child)
 

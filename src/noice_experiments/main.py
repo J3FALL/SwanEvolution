@@ -34,7 +34,8 @@ def optimize_by_real_obs():
                            forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
     history, archive_history = SPEA2(
-        params=SPEA2.Params(max_gens=50, pop_size=10, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
+        params=SPEA2.Params(max_gens=50, pop_size=10, archive_size=5,
+                            crossover_rate=0.8, mutation_rate=0.8, mutation_value_rate=2),
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives_interp, fake_model),
         crossover=crossover,
@@ -66,7 +67,8 @@ def optimize_by_ww3_obs():
                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
     history, archive_history = SPEA2(
-        params=SPEA2.Params(max_gens=20, pop_size=10, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
+        params=SPEA2.Params(max_gens=20, pop_size=10, archive_size=5,
+                            crossover_rate=0.8, mutation_rate=0.8, mutation_value_rate=2),
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives_interp, fake),
         crossover=crossover,
@@ -115,7 +117,7 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
     for t in range(1, 10):
         history, _ = SPEA2(
             params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size,
-                                crossover_rate=crossover_rate, mutation_rate=mutation_rate),
+                                crossover_rate=crossover_rate, mutation_rate=mutation_rate, mutation_value_rate=2),
             new_individ=SWANParams.new_instance,
             objectives=partial(calculate_objectives_interp, fake),
             crossover=crossover,
