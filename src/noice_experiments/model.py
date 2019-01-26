@@ -2,8 +2,10 @@ import csv
 import os
 import random
 from collections import Counter
+import pickle
 
 import numpy as np
+from scipy.interpolate import interpn
 
 from src.noice_experiments.noisy_wind_files import (
     files_by_stations,
@@ -85,6 +87,36 @@ class FakeModel:
             drf_idx, cfw_idx, stpm_idx = self.params_idxs(row.model_params)
             self.grid[drf_idx, cfw_idx, stpm_idx] = forecasts
 
+        # fintess grid for iterpolation
+
+        # empty array
+        self.err_grid = np.asarray([[[[s for s in np.arange(len(stations))] for k in np.arange(self.grid.shape[2])] for
+                                     j in np.arange(self.grid.shape[1])] for i in np.arange(self.grid.shape[0])],
+                                   dtype=np.float32)
+
+
+        # calc fitness for every point
+
+        grid_file_path='../grid-saved-rmse.pik'
+
+        if (not os.path.isfile(grid_file_path)):
+            for i in range(0, self.grid.shape[0]):
+                for j in range(0, self.grid.shape[1]):
+                    for k in range(0, self.grid.shape[2]):
+                        forecasts = [forecast for forecast in self.grid[i, j, k]]
+                        stat_ind = 0
+                        for forecast, observation in zip(forecasts, self.observations):
+                            self.err_grid[i, j, k, stat_ind] = self.error(forecast, observation)
+                            stat_ind = stat_ind + 1
+
+            pickle_out = open(grid_file_path, 'wb')
+            pickle.dump(self.err_grid, pickle_out)
+            pickle_out.close()
+            print ("FINTESS GRID SAVED")
+        else:
+            with open('../grid-saved-rmse.pik', 'rb') as f:
+                self.err_grid=pickle.load(f)
+
     def _empty_grid(self):
         return np.empty((len(self.grid_file.drf_grid),
                          len(self.grid_file.cfw_grid),
@@ -106,6 +138,22 @@ class FakeModel:
         return drf, cfw, stpm
 
     def output(self, params):
+
+        points = (
+        np.asarray(self.grid_file.drf_grid), np.asarray(self.grid_file.cfw_grid), np.asarray(self.grid_file.stpm_grid))
+
+        interp_mesh = np.array(np.meshgrid(params.drf, params.cfw, params.stpm))
+        interp_points = np.rollaxis(interp_mesh, 0, 4).reshape((1, 3))
+
+        out = np.zeros(len(self.stations))
+        for i in range(0, len(self.stations)):
+            int_obs = interpn(np.asarray(points), self.err_grid[:, :, :, i], interp_points, method="linear",
+                              bounds_error=False)
+            out[i] = int_obs
+
+        return out
+
+    def output_no_int(self, params):
         drf_idx, cfw_idx, stpm_idx = self.params_idxs(params=params)
 
         forecasts = [forecast for forecast in self.grid[drf_idx, cfw_idx, stpm_idx]]

@@ -4,6 +4,8 @@ from datetime import datetime
 from math import sqrt
 from operator import itemgetter
 
+import numpy as np
+
 random.seed(datetime.now())
 
 
@@ -48,7 +50,7 @@ class SPEA2:
 
         def fitness(self):
             # return self.raw_fitness + self.density
-            return rmse(self)
+            return mean_obj(self)
 
         def weighted_sum(self):
             return sum(list(self.objectives))
@@ -86,8 +88,9 @@ class SPEA2:
             last_fit = history.last().fitness_value
             if last_fit > best.fitness():
                 best_gens = best.genotype
-                print("new best: ", best.fitness(), best.objectives,
-                      rmse(best))
+                print("new best: ", round(best.fitness(), 5), round(best.genotype.drf, 2), round(best.genotype.cfw, 6),
+                      round(best.genotype.stpm, 6),
+                      round(rmse(best), 4))
                 print(gen)
                 history.add_new(best_gens, gen, best.fitness(),
                                 rmse(best))
@@ -213,6 +216,9 @@ class SPEA2:
         # children.extend(best_parents)
         for p1 in selected:
             idx = selected.index(p1)
+            if (idx + 1 > len(selected) - 1):
+                idx = len(selected) - 1 - 1
+            if (idx == 0): idx = 1
             p2 = selected[idx + 1] if idx % 2 == 0 else selected[idx - 1]
             if idx == len(selected) - 1:
                 p2 = selected[0]
@@ -233,3 +239,7 @@ def rmse(individ):
     for obj in individ.objectives:
         result += pow(obj, 2)
     return sqrt(result / len(individ.objectives))
+
+
+def mean_obj(individ):
+    return np.mean(individ.objectives)
