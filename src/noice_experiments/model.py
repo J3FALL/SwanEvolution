@@ -195,10 +195,6 @@ class CSVGridFile:
             self.cfw_grid = unique_values(cfw_values)
             self.stpm_grid = unique_values(stpm_values)
 
-            print(self.drf_grid)
-            print(self.cfw_grid)
-            print(self.stpm_grid)
-
 
 class CSVGridRow:
     def __init__(self, row):

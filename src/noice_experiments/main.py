@@ -70,7 +70,7 @@ def optimize_by_ww3_obs():
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives_interp, fake),
         crossover=crossover,
-        mutation=mutation).solution()
+        mutation=mutation).solution(verbose=True)
 
     params = history.last().genotype
 
@@ -177,8 +177,8 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
     return [result_td, metrics_td, metrics_q, params_r]
 
 
-optimize_by_real_obs()
-# optimize_by_ww3_obs()
+# optimize_by_real_obs()
+optimize_by_ww3_obs()
 
 # f = run_robustess_exp(7, 10, 6, 0.29, 0.6)
 # print("META FINTESS")

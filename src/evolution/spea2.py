@@ -74,7 +74,7 @@ class SPEA2:
         def last(self):
             return SPEA2.ErrorHistory.Point() if len(self.history) == 0 else self.history[-1]
 
-    def solution(self):
+    def solution(self, verbose=True):
         archive_history = []
         history = SPEA2.ErrorHistory()
 
@@ -88,10 +88,10 @@ class SPEA2:
             last_fit = history.last().fitness_value
             if last_fit > best.fitness():
                 best_gens = best.genotype
-                print("new best: ", round(best.fitness(), 5), round(best.genotype.drf, 2), round(best.genotype.cfw, 6),
-                      round(best.genotype.stpm, 6),
-                      round(rmse(best), 4))
-                print(gen)
+
+                if verbose:
+                    print_new_best_individ(best, gen)
+
                 history.add_new(best_gens, gen, best.fitness(),
                                 rmse(best))
             selected = self.selected(self.params.pop_size, self._archive)
@@ -243,3 +243,11 @@ def rmse(individ):
 
 def mean_obj(individ):
     return np.mean(individ.objectives)
+
+
+def print_new_best_individ(best, gen_index):
+    print("new best: ", round(best.fitness(), 5), round(best.genotype.drf, 2),
+          round(best.genotype.cfw, 6),
+          round(best.genotype.stpm, 6),
+          round(rmse(best), 4))
+    print(gen_index)
