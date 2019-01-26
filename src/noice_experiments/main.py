@@ -27,9 +27,6 @@ from src.swan.files import (
 )
 
 
-# from src.ww3.files import wave_watch_results
-
-
 def real_obs_config():
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
     obs = [obs.time_series(from_date="20140814.120000", to_date="20140915.000000") for obs in real_obs_from_files()]
@@ -43,7 +40,7 @@ def optimize_by_real_obs():
     fake_model, grid = real_obs_config()
 
     history, archive_history = SPEA2(
-        params=SPEA2.Params(max_gens=1000, pop_size=10, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
+        params=SPEA2.Params(max_gens=50, pop_size=10, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives_interp, fake_model),
         crossover=crossover,
@@ -59,7 +56,7 @@ def optimize_by_real_obs():
             forecasts = fake_model.grid[drf_idx, cfw_idx, stpm_idx]
 
     observations = real_obs_from_files()
-    plot_results(forecasts=forecasts, observations=observations, optimization_history=history)
+    plot_results(forecasts=forecasts, observations=observations)
     return history
 
 
@@ -74,7 +71,7 @@ def optimize_by_ww3_obs():
     fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
-    history, _ = SPEA2(
+    history, archive_history = SPEA2(
         params=SPEA2.Params(max_gens=20, pop_size=10, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives_interp, fake),
@@ -99,8 +96,8 @@ def optimize_by_ww3_obs():
             break
 
     plot_results(forecasts=forecasts,
-                 observations=wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations),
-                 optimization_history=history)
+                 observations=wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations))
+    plot_population_movement(archive_history, grid)
 
     return history
 
@@ -122,7 +119,7 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
     obtained_params = []
     obtained_metrics = []
     for t in range(1, 10):
-        history = SPEA2(
+        history, _ = SPEA2(
             params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size,
                                 crossover_rate=crossover_rate, mutation_rate=mutation_rate),
             new_individ=SWANParams.new_instance,
@@ -186,7 +183,7 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
     return [result_td, metrics_td, metrics_q, params_r]
 
 
-def plot_results(forecasts, observations, optimization_history):
+def plot_results(forecasts, observations):
     # assert len(observations) == len(forecasts) == 3
 
     fig, axs = plt.subplots(3, 3)
@@ -277,6 +274,9 @@ def grid_rmse():
 def rmse(vars):
     return sqrt(sum([pow(v, 2) for v in vars]) / len(vars))
 
+
+# optimize_by_real_obs()
+# optimize_by_ww3_obs()
 
 f = run_robustess_exp(7, 10, 6, 0.29, 0.6)
 print("META FINTESS")

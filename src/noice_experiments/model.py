@@ -1,8 +1,8 @@
 import csv
 import os
+import pickle
 import random
 from collections import Counter
-import pickle
 
 import numpy as np
 from scipy.interpolate import interpn
@@ -94,10 +94,9 @@ class FakeModel:
                                      j in np.arange(self.grid.shape[1])] for i in np.arange(self.grid.shape[0])],
                                    dtype=np.float32)
 
-
         # calc fitness for every point
 
-        grid_file_path='../grid-saved-rmse.pik'
+        grid_file_path = '../grid-saved-rmse.pik'
 
         if (not os.path.isfile(grid_file_path)):
             for i in range(0, self.grid.shape[0]):
@@ -112,10 +111,10 @@ class FakeModel:
             pickle_out = open(grid_file_path, 'wb')
             pickle.dump(self.err_grid, pickle_out)
             pickle_out.close()
-            print ("FINTESS GRID SAVED")
+            print("FINTESS GRID SAVED")
         else:
             with open('../grid-saved-rmse.pik', 'rb') as f:
-                self.err_grid=pickle.load(f)
+                self.err_grid = pickle.load(f)
 
     def _empty_grid(self):
         return np.empty((len(self.grid_file.drf_grid),
@@ -140,7 +139,8 @@ class FakeModel:
     def output(self, params):
 
         points = (
-        np.asarray(self.grid_file.drf_grid), np.asarray(self.grid_file.cfw_grid), np.asarray(self.grid_file.stpm_grid))
+            np.asarray(self.grid_file.drf_grid), np.asarray(self.grid_file.cfw_grid),
+            np.asarray(self.grid_file.stpm_grid))
 
         interp_mesh = np.array(np.meshgrid(params.drf, params.cfw, params.stpm))
         interp_points = np.rollaxis(interp_mesh, 0, 4).reshape((1, 3))

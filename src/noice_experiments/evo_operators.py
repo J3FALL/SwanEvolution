@@ -1,5 +1,7 @@
 import random
+
 import numpy as np
+
 from src.noice_experiments.model import SWANParams
 
 
@@ -48,11 +50,11 @@ def mutation(individ, rate):
         sign = 1 if random.random() < 0.5 else -1
         if param_to_mutate is 'drf':
             individ.drf += sign * 0.05 * mutation_ratio
-            individ.drf=abs(individ.drf)
+            individ.drf = abs(individ.drf)
         if param_to_mutate is 'cfw':
             individ.cfw += sign * 0.01 * mutation_ratio
-            individ.cfw=abs(individ.cfw)
+            individ.cfw = abs(individ.cfw)
         if param_to_mutate is 'stpm':
             individ.stpm += sign * 0.0003 * mutation_ratio
-            individ.stpm=abs(individ.stpm)
+            individ.stpm = abs(individ.stpm)
     return individ
