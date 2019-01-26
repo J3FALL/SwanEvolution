@@ -96,9 +96,9 @@ class FakeModel:
 
         # calc fitness for every point
 
-        grid_file_path = '../grid-saved-rmse.pik'
+        grid_file_path = f'../grid-saved-rmse.pik_{self.noise_run}'
 
-        if (not os.path.isfile(grid_file_path)):
+        if not os.path.isfile(grid_file_path):
             for i in range(0, self.grid.shape[0]):
                 for j in range(0, self.grid.shape[1]):
                     for k in range(0, self.grid.shape[2]):
@@ -111,9 +111,9 @@ class FakeModel:
             pickle_out = open(grid_file_path, 'wb')
             pickle.dump(self.err_grid, pickle_out)
             pickle_out.close()
-            print("FINTESS GRID SAVED")
+            print(f"FITNESS GRID SAVED, file_name: {grid_file_path}")
         else:
-            with open('../grid-saved-rmse.pik', 'rb') as f:
+            with open(grid_file_path, 'rb') as f:
                 self.err_grid = pickle.load(f)
 
     def _empty_grid(self):
