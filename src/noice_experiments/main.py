@@ -21,9 +21,12 @@ from src.noice_experiments.model import (
 from src.noice_experiments.model import SWANParams
 from src.simple_evo.evo import SPEA2
 from src.swan.files import (
-    real_obs_from_files
+    real_obs_from_files,
+    wave_watch_results
 )
-from src.ww3.files import wave_watch_results
+
+
+# from src.ww3.files import wave_watch_results
 
 
 def real_obs_config():
@@ -111,13 +114,6 @@ def plot_results(forecasts, observations, optimization_history):
                        label=f'Predicted, Station {station_idx}')
         axs[i, j].legend()
 
-    gens = [error.genotype_index for error in optimization_history.history]
-    error_vals = [error.error_value for error in optimization_history.history]
-
-    # axs[1, 1].plot()
-    # axs[1, 1].plot(gens, error_vals, label='Loss history', marker=".")
-    # axs[1, 1].legend()
-
     plt.show()
 
 
@@ -192,7 +188,7 @@ def rmse(vars):
     return sqrt(sum([pow(v, 2) for v in vars]) / len(vars))
 
 
-# optimize_by_ww3_obs()
-optimize_by_real_obs()
+optimize_by_ww3_obs()
+# optimize_by_real_obs()
 
 # grid_rmse()
