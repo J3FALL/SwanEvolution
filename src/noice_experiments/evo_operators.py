@@ -35,19 +35,9 @@ def crossover(p1, p2, rate):
     if random.random() >= rate:
         return p1
 
-    params = ['drf', 'cfw', 'stpm']
-    param_to_mutate = params[random.randint(0, 2)]
-
-    drf = p1.drf
-    cfw = p1.cfw
-    stpm = p1.stpm
-
-    if param_to_mutate is 'drf':
-        drf = p2.drf
-    if param_to_mutate is 'cfw':
-        cfw = p2.cfw
-    if param_to_mutate is 'stpm':
-        stpm = p2.stpm
+    drf = p1.drf if random.randint(0, 1) else p2.drf
+    cfw = p1.cfw if random.randint(0, 1) else p2.cfw
+    stpm = p1.stpm if random.randint(0, 1) else p2.stpm
 
     child_params = SWANParams(drf=drf,
                               cfw=cfw,
