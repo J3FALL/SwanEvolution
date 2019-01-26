@@ -124,3 +124,4 @@ def wave_watch_results(path_to_results=PATH_TO_WW3_RESULTS, stations=None):
 
     result = [WaveWatchObservationFile(file) for file in sorted(files)]
     return result
+

@@ -1,9 +1,7 @@
 from functools import partial
 
-import matplotlib.pyplot as plt
-import numpy as np
-
-from src.ensemble.model import Ensemble
+from src.ensemble.ensemble import Ensemble
+from src.evolution.spea2 import SPEA2
 from src.noice_experiments.errors import error_rmse_peak
 from src.noice_experiments.evo_operators import (
     calculate_objectives,
@@ -15,8 +13,8 @@ from src.noice_experiments.model import (
     SWANParams,
     FakeModel
 )
-from src.simple_evo.evo import SPEA2
-from src.swan.files import real_obs_from_files
+from src.utils.files import real_obs_from_files
+from src.utils.vis import plot_results
 
 
 def optimize():
@@ -53,26 +51,6 @@ def optimize():
     plot_results(forecasts=forecasts, observations=observations)
 
     return history
-
-
-def plot_results(forecasts, observations):
-    # assert len(observations) == len(forecasts) == 3
-
-    fig, axs = plt.subplots(3, 3)
-    time = np.linspace(1, 253, num=len(forecasts[0].hsig_series))
-
-    obs_series = []
-    for obs in observations:
-        obs_series.append(obs.time_series(from_date="20140814.120000", to_date="20140915.000000")[:len(time)])
-    for idx in range(len(forecasts)):
-        i, j = divmod(idx, 3)
-        station_idx = observations[idx].station_idx
-        axs[i, j].plot(time, obs_series[idx],
-                       label=f'Observations, Station {station_idx}')
-        axs[i, j].plot(time, forecasts[idx].hsig_series,
-                       label=f'Predicted, Station {station_idx}')
-        axs[i, j].legend()
-    plt.show()
 
 
 optimize()
