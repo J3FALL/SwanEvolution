@@ -1,7 +1,10 @@
 import csv
+import glob
 import os
 import re
 from datetime import datetime
+
+PATH_TO_WW3_RESULTS = '../../samples/ww-res/'
 
 
 class ObservationFile:
@@ -99,8 +102,25 @@ def real_obs_from_files():
 
     for station_idx, file in enumerate(files, 0):
         observations.append(ObservationFile(path=file, station_idx=station_idx))
-        # observations.append(obs.time_series(from_date="20140814.120000", to_date="20140915.000000"))
 
     return observations
 
-# ww3_file = WaveWatchObservationFile(path='../../samples/ww-res/obs_fromww_1.csv')
+
+def wave_watch_results(path_to_results=PATH_TO_WW3_RESULTS, stations=None):
+    '''
+
+    :param path_to_results: Path to directory with ww3 results stored as csv-files
+    :param stations: List of stations to take
+    :return: List of WaveWatchObservationFiles objects according to chosen stations
+    '''
+
+    choice = '|'.join([str(station) for station in stations])
+    file_pattern = f'obs_fromww_({choice}).csv'
+
+    files = []
+    for file in glob.iglob(os.path.join(path_to_results, '*.csv')):
+        if re.search(file_pattern, file):
+            files.append(file)
+
+    result = [WaveWatchObservationFile(file) for file in sorted(files)]
+    return result

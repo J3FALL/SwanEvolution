@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 
+# TODO: remove this ?
 class ObservationFile:
     def __init__(self, path):
         self.path = path
