@@ -2,7 +2,7 @@ from functools import partial
 
 from src.ensemble.ensemble import Ensemble
 from src.evolution.spea2 import SPEA2
-from src.noice_experiments.errors import error_rmse_peak
+from src.noice_experiments.errors import error_rmse_all
 from src.noice_experiments.evo_operators import (
     calculate_objectives,
     crossover,
@@ -22,7 +22,7 @@ def optimize():
     obs = [obs.time_series(from_date="20140814.120000", to_date="20140915.000000") for obs in
            real_obs_from_files()]
 
-    base_model = FakeModel(grid_file=grid, observations=obs, stations_to_out=[1, 2, 3], error=error_rmse_peak,
+    base_model = FakeModel(grid_file=grid, observations=obs, stations_to_out=[1, 2, 3], error=error_rmse_all,
                            forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
     ens = Ensemble(grid=grid, noise_cases=[1, 15, 25, 26], observations=obs,
@@ -31,7 +31,7 @@ def optimize():
 
     history, _ = SPEA2(
         params=SPEA2.Params(max_gens=150, pop_size=10, archive_size=5,
-                            crossover_rate=0.8, mutation_rate=0.8, mutation_value_rate=2),
+                            crossover_rate=0.8, mutation_rate=0.8, mutation_value_rate=[0.1, 0.005, 0.005]),
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives, ens),
         crossover=crossover,
