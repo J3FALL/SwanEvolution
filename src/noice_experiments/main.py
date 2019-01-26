@@ -2,12 +2,15 @@ import csv
 from functools import partial
 from math import sqrt
 
+import random
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 from src.noice_experiments.errors import (
     error_rmse_peak,
-    error_rmse_all
+    error_rmse_all,
+    error_dtw_all
 )
 from src.noice_experiments.evo_operators import (
     calculate_objectives,
@@ -67,11 +70,11 @@ def optimize_by_ww3_obs():
     ww3_obs = \
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
 
-    fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_peak,
+    fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
     history = SPEA2(
-        params=SPEA2.Params(max_gens=100, pop_size=50, archive_size=5, crossover_rate=0.8, mutation_rate=0.8),
+        params=SPEA2.Params(max_gens=30, pop_size=10, archive_size=5, crossover_rate=0.3, mutation_rate=0.3),
         new_individ=SWANParams.new_instance,
         objectives=partial(calculate_objectives_interp, fake),
         crossover=crossover,
@@ -80,25 +83,105 @@ def optimize_by_ww3_obs():
     params = history.last().genotype
 
     forecasts = []
+
+    closest_hist = fake.closest_params(params)
+    closest_params_set_hist = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
+
     for row in grid.rows:
 
-        # find clostst forecast from pre-simulated data
-        closest_row = fake.closest_params(row.model_params)
-        closest_params_set_row = SWANParams(drf=closest_row[0], cfw=closest_row[1], stpm=closest_row[2])
-
-        closest_hist = fake.closest_params(params)
-        closest_params_set_hist = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
-
-        if set(closest_params_set_row.params_list()) == set(closest_params_set_hist.params_list()):
-            drf_idx, cfw_idx, stpm_idx = fake.params_idxs(closest_params_set_row)
+        if set(row.model_params.params_list()) == set(closest_params_set_hist.params_list()):
+            drf_idx, cfw_idx, stpm_idx = fake.params_idxs(row.model_params)
             forecasts = fake.grid[drf_idx, cfw_idx, stpm_idx]
+            if grid.rows.index(row) < 100:
+                print("!!!")
             print("index : %d" % grid.rows.index(row))
+            break
 
     plot_results(forecasts=forecasts,
                  observations=wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations),
                  optimization_history=history)
 
     return history
+
+
+def run_robustess_exp(max_gens,pop_size,archive_size,crossover_rate,mutation_rate):
+    grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
+
+    import random
+    random.seed(42)
+
+    stations = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+    ww3_obs = \
+        [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
+
+    fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
+                     forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+
+    obtained_params = []
+    obtained_metrics = []
+    for t in range(1, 10):
+        history = SPEA2(
+            params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size, crossover_rate=crossover_rate, mutation_rate=mutation_rate),
+            new_individ=SWANParams.new_instance,
+            objectives=partial(calculate_objectives_interp, fake),
+            crossover=crossover,
+            mutation=mutation).solution()
+
+        params = history.last().genotype
+
+        obtained_params.append([params.drf, params.cfw, params.stpm])
+        obtained_metrics.append(history.last().error_value)
+
+        forecasts = []
+
+        closest_hist = fake.closest_params(params)
+        closest_params_set_hist = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
+
+        for row in grid.rows:
+
+            if set(row.model_params.params_list()) == set(closest_params_set_hist.params_list()):
+                drf_idx, cfw_idx, stpm_idx = fake.params_idxs(row.model_params)
+                forecasts = fake.grid[drf_idx, cfw_idx, stpm_idx]
+                print("index : %d" % grid.rows.index(row))
+                break
+
+       # plot_results(forecasts=forecasts,
+       #              observations=wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations),
+       #              optimization_history=history)
+
+    print("ROBUSTNESS METRICS")
+    print("DRAG SD, %")
+    drag_sdm=np.std([i[0] for i in obtained_params]) / 1 * 100
+    print(round(drag_sdm,4))
+    print("CFW SD, %")
+    cfw_sdm=np.std([i[1] for i in obtained_params]) / 0.015 * 100
+    print(round(cfw_sdm,4))
+    print("STMP SD, %")
+    stpm_sdm=np.std([i[2] for i in obtained_params]) / 0.00302 * 100
+    print(round(stpm_sdm,4))
+    print("FITNESS SD, %")
+    print(round(np.std(obtained_metrics)/np.mean(obtained_metrics)*100,4))
+
+    print("QUALITY METRICS")
+    print("MEAN")
+    print(round(np.mean(obtained_metrics), 2))
+    print("MAX")
+    print(round(np.max(obtained_metrics), 2))
+    print("MIN")
+    print(round(np.min(obtained_metrics), 2))
+    print("PARAMS")
+    print(max_gens, pop_size, archive_size, crossover_rate, mutation_rate)
+
+    result_td = np.mean(obtained_metrics)*(np.std(obtained_metrics)/np.mean(obtained_metrics)*100)
+
+    metrics_td = np.mean(obtained_metrics)*(drag_sdm*cfw_sdm*stpm_sdm)
+
+    metrics_q = np.mean(obtained_metrics)
+
+    params_r = (drag_sdm*cfw_sdm*stpm_sdm)
+
+    return [result_td,metrics_td,metrics_q,params_r]
 
 
 def plot_results(forecasts, observations, optimization_history):
@@ -168,8 +251,18 @@ def rmse(vars):
     return sqrt(sum([pow(v, 2) for v in vars]) / len(vars))
 
 
-history = optimize_by_ww3_obs()
-history
+
+
+# history = optimize_by_ww3_obs()
+#exp_res = run_robustess_exp()
+# history
 # optimize_by_real_obs()
 
 # grid_rmse()
+
+f=run_robustess_exp(7,10,6,0.29,0.6)
+print("META FINTESS")
+print(f)
+
+
+f=run_robustess_exp(28,20,6,0.67,0.17)

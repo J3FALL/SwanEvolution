@@ -72,16 +72,18 @@ class SPEA2:
     class ErrorHistory:
         class Point:
             def __init__(self, genotype="", genotype_index=0, fitness_value=pow(10, 9), error_value=pow(10, 9)):
+
                 self.genotype = genotype
                 self.genotype_index = genotype_index
                 self.fitness_value = fitness_value
                 self.error_value = error_value
 
+
         def __init__(self):
             self.history = []
 
         def add_new(self, genotype, genotype_index, fitness, error):
-            self.history.append(SPEA2.ErrorHistory.Point(genotype=genotype, genotype_index=genotype_index,
+            self.history.append(SPEA2.ErrorHistory.Point(genotype=copy.deepcopy(genotype), genotype_index=genotype_index,
                                                          fitness_value=fitness, error_value=error))
 
         def last(self):
@@ -236,6 +238,9 @@ class SPEA2:
         # children.extend(best_parents)
         for p1 in selected:
             idx = selected.index(p1)
+            if (idx+1>len(selected)-1):
+                idx=len(selected)-1-1
+            if (idx==0): idx = 1
             p2 = selected[idx + 1] if idx % 2 == 0 else selected[idx - 1]
             if idx == len(selected) - 1:
                 p2 = selected[0]
