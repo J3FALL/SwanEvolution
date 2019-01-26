@@ -35,9 +35,3 @@ def files_by_stations(files, noise_run, stations):
             [file for file in files if is_valid(file, expected_station=station, expected_noise_run=str(noise_run))])
 
     return groups
-
-
-files = forecast_files_from_dir('../../samples/wind-noice-runs/results/1/')
-
-groups = files_by_stations(files, noise_run=1, stations=['1', '2', '3'])
-print(groups)
