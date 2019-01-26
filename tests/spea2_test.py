@@ -1,6 +1,6 @@
 from src.algorithm.benchmarks import schaffer
 from src.algorithm.benchmarks import zdt
-from src.algorithm.spea2 import SPEA2
+from src.algorithm.benchmarks.spea2 import SPEA2
 
 
 class SPEA2Test:

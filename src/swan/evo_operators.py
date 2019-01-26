@@ -3,6 +3,8 @@ import random
 from src.swan.model import SWANParams
 
 
+# TODO: remove or rename this to 'default_evo_operators"
+
 def calculate_objectives(model, pop):
     '''
     Calculate two error functions i.e. |model_out - observation| ^ 2

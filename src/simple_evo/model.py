@@ -7,6 +7,8 @@ from math import sqrt
 
 import numpy as np
 
+# TODO: remove this ?
+
 OBSERVED_STATIONS = 3
 
 from src.swan.files import ObservationFile
