@@ -1,4 +1,21 @@
 from math import sqrt
+import numpy as np
+from fastdtw import fastdtw
+from scipy.spatial.distance import euclidean
+
+
+
+def error_dtw_all(forecast, observations):
+    '''
+    Calculate DTW metric of between forecasts and observations for corresponding station
+    :param forecast: Forecast object
+    :param observations: ObservationFile object
+    '''
+
+    distance, path = fastdtw(forecast.hsig_series, observations, dist=euclidean)
+
+   # print("DTW")
+    return distance
 
 
 def error_rmse_all(forecast, observations):
@@ -9,10 +26,12 @@ def error_rmse_all(forecast, observations):
     '''
 
     result = 0.0
+    penalty_var=abs((np.var(observations)-np.var(forecast.hsig_series))/np.var(observations))+1
+
     for pred, obs in zip(forecast.hsig_series, observations):
         result += pow(pred - obs, 2)
 
-    return sqrt(result / len(observations))
+    return sqrt(result / len(observations))*penalty_var
 
 
 def error_rmse_peak(forecast, observations):
@@ -22,7 +41,7 @@ def error_rmse_peak(forecast, observations):
     :param observations: ObservationFile object
     '''
 
-    peak_thr=0.25
+    peak_thr=np.mean(observations)
     observation_peaks = [obs if obs > peak_thr else peak_thr for obs in observations]
 
     forcasts_peaks = [fk if fk > peak_thr else peak_thr for fk in forecast.hsig_series]
