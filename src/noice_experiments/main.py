@@ -1,3 +1,4 @@
+import random
 from functools import partial
 
 import numpy as np
@@ -26,8 +27,6 @@ from src.utils.vis import (
     plot_population_movement
 )
 
-import random
-
 random.seed(42)
 
 
@@ -41,8 +40,9 @@ def get_metrics_for_all_stations(forecasts, observations):
         obs_series.append(obs.time_series(from_date="20140814.120000", to_date="20140915.000000")[:len(time)])
 
     results_for_stations = np.zeros(len(forecasts))
-    for idx in range(0,len(forecasts)):
-        results_for_stations[idx] = np.sqrt(np.mean((np.array(forecasts[idx].hsig_series) - np.array(obs_series[idx])) ** 2))
+    for idx in range(0, len(forecasts)):
+        results_for_stations[idx] = np.sqrt(
+            np.mean((np.array(forecasts[idx].hsig_series) - np.array(obs_series[idx])) ** 2))
     return results_for_stations
 
 
@@ -127,8 +127,9 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
     fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
-    fake_all = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=[1,2,3,4,5,6,7,8,9], error=error_rmse_all,
-                     forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+    fake_all = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+                         error=error_rmse_all,
+                         forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
     obtained_params = []
     obtained_metrics = []
@@ -160,9 +161,9 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
                 print("index : %d" % grid.rows.index(row))
                 break
 
-        # plot_results(forecasts=forecasts,
-        #             observations=wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations),
-        #             optimization_history=history)
+                # plot_results(forecasts=forecasts,
+                #             observations=wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations),
+                #             optimization_history=history)
 
     print("ROBUSTNESS METRICS")
     print("DRAG SD, %")

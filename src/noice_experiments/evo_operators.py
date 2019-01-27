@@ -1,8 +1,18 @@
 import random
 
 import numpy as np
+from pyDOE import lhs
+from scipy.stats.distributions import norm
 
 from src.noice_experiments.model import SWANParams
+
+drf_range = [0.2, 0.4, 0.6000000000000001, 0.8, 1.0, 1.2, 1.4, 1.5999999999999999, 1.7999999999999998,
+             1.9999999999999998, 2.1999999999999997, 2.4, 2.6, 2.8000000000000003]
+
+cfw_range = [0.005, 0.01, 0.015, 0.02, 0.025, 0.030000000000000002, 0.035, 0.04, 0.045, 0.049999999999999996]
+stpm_range = [0.001, 0.0025, 0.004, 0.0055, 0.006999999999999999, 0.008499999999999999, 0.009999999999999998]
+
+PARAMS = 3
 
 
 def calculate_objectives(model, pop):
@@ -62,3 +72,14 @@ def mutation(individ, rate, mutation_value_rate):
             individ.stpm += sign * mutation_value_rate[2] * mutation_ratio
             individ.stpm = abs(individ.stpm)
     return individ
+
+
+def initial_population_lhs(size):
+    samples_grid = lhs(PARAMS, size, 'center')
+
+    for idx, params_range in enumerate([drf_range, cfw_range, stpm_range]):
+        samples_grid[:, idx] = norm(loc=np.mean(params_range), scale=np.var(params_range)).ppf(samples_grid[:, idx])
+
+    population = [SWANParams(drf=sample[0], cfw=sample[1], stpm=sample[2]) for sample in samples_grid]
+
+    return population
