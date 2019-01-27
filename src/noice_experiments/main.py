@@ -26,6 +26,25 @@ from src.utils.vis import (
     plot_population_movement
 )
 
+import random
+
+random.seed(42)
+
+
+def get_metrics_for_all_stations(forecasts, observations):
+    # assert len(observations) == len(forecasts) == 3
+
+    time = np.linspace(1, 253, num=len(forecasts[0].hsig_series))
+
+    obs_series = []
+    for obs in observations:
+        obs_series.append(obs.time_series(from_date="20140814.120000", to_date="20140915.000000")[:len(time)])
+
+    results_for_stations = np.zeros(len(forecasts))
+    for idx in range(0,len(forecasts)):
+        results_for_stations[idx] = np.sqrt(np.mean((np.array(forecasts[idx].hsig_series) - np.array(obs_series[idx])) ** 2))
+    return results_for_stations
+
 
 def optimize_by_real_obs():
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
@@ -99,13 +118,8 @@ def optimize_by_ww3_obs(max_gens, pop_size, archive_size, crossover_rate, mutati
     return history
 
 
-def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate):
+def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate, stations):
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
-
-    import random
-    random.seed(42)
-
-    stations = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     ww3_obs = \
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
@@ -113,9 +127,12 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
     fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
+    fake_all = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=[1,2,3,4,5,6,7,8,9], error=error_rmse_all,
+                     forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+
     obtained_params = []
     obtained_metrics = []
-    for t in range(1, 10):
+    for t in range(1, 20):
         history, _ = SPEA2(
             params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size,
                                 crossover_rate=crossover_rate, mutation_rate=mutation_rate,
@@ -123,7 +140,7 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
             new_individ=SWANParams.new_instance,
             objectives=partial(calculate_objectives_interp, fake),
             crossover=crossover,
-            mutation=mutation).solution()
+            mutation=mutation).solution(verbose=False)
 
         params = history.last().genotype
 
@@ -139,13 +156,13 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
 
             if set(row.model_params.params_list()) == set(closest_params_set_hist.params_list()):
                 drf_idx, cfw_idx, stpm_idx = fake.params_idxs(row.model_params)
-                forecasts = fake.grid[drf_idx, cfw_idx, stpm_idx]
+                forecasts = fake_all.grid[drf_idx, cfw_idx, stpm_idx]
                 print("index : %d" % grid.rows.index(row))
                 break
 
-    # plot_results(forecasts=forecasts,
-    #              observations=wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations),
-    #              optimization_history=history)
+        # plot_results(forecasts=forecasts,
+        #             observations=wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations),
+        #             optimization_history=history)
 
     print("ROBUSTNESS METRICS")
     print("DRAG SD, %")
@@ -178,14 +195,55 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
 
     params_r = (drag_sdm * cfw_sdm * stpm_sdm)
 
-    return [result_td, metrics_td, metrics_q, params_r]
+    all_stat_metrics = get_metrics_for_all_stations(forecasts,
+                                                    wave_watch_results(path_to_results='../../samples/ww-res/',
+                                                                       stations=[1, 2, 3, 4, 5, 6, 7, 8, 9]))
+
+    return [result_td, metrics_td, metrics_q, params_r, history.last(), all_stat_metrics]
 
 
 # optimize_by_real_obs()
-optimize_by_ww3_obs(28, 20, 6, 0.7, 0.7, [0.1, 0.005, 0.005])
+# optimize_by_ww3_obs(28, 20, 6, 0.7, 0.7, [0.1, 0.005, 0.005])
 
 # f = run_robustess_exp(28, 20, 6, 0.7, 0.7, [0.1, 0.005, 0.005])
 # print("META FINTESS")
 # print(f)
 #
 # f = run_robustess_exp(28, 20, 6, 0.67, 0.17)
+
+
+objective_robustparams = {'a': 0, 'archive_size_rate': 0.3516265476722533, 'crossover_rate': 0.7194075160834003,
+                          'max_gens': 3, 'mutation_p1': 0.18530572116666033, 'mutation_p2': 0.008275074614718868,
+                          'mutation_p3': 0.000917588547202427, 'mutation_rate': 0.15718021655197123, 'pop_size': 19}
+
+objective_q = {'a': 0, 'archive_size_rate': 0.18192329983957756, 'crossover_rate': 0.8275151161211388, 'max_gens': 4,
+               'mutation_p1': 0.22471644990516082, 'mutation_p2': 0.004027729364749993,
+               'mutation_p3': 0.000297583624177003, 'mutation_rate': 0.22663581900044313, 'pop_size': 9}
+
+objective_tradeoff = {'a': 0, 'archive_size_rate': 0.35157832568915776, 'crossover_rate': 0.37407732045418357,
+                      'max_gens': 9, 'mutation_p1': 0.21674397143802346, 'mutation_p2': 0.017216450597376923,
+                      'mutation_p3': 0.0008306686136608031, 'mutation_rate': 0.2696660952766096, 'pop_size': 17}
+
+objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
+                    'max_gens': 10, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
+                    'mutation_p3': 0.001, 'mutation_rate': 0.5, 'pop_size': 20}
+
+papam_for_run = objective_manual
+
+stations_for_run_set = [[1], [1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 2, 3, 4, 5, 6, 7, 8, 9]]
+stations_metrics = [np.zeros(9), np.zeros(9), np.zeros(9), np.zeros(9), np.zeros(9)]
+
+for i in range(0, len(stations_for_run_set)):
+    stations_for_run = stations_for_run_set[i]
+    res = run_robustess_exp(papam_for_run['max_gens'], papam_for_run['pop_size'],
+                            round(papam_for_run['archive_size_rate'] * papam_for_run['pop_size']),
+                            papam_for_run['crossover_rate'],
+                            papam_for_run['mutation_rate'],
+                            [papam_for_run['mutation_p1'], papam_for_run['mutation_p2'],
+                             papam_for_run['mutation_p3']], stations_for_run)
+    best = res[4]
+
+    stations_metrics[i][0:9
+    ] = res[5]
+
+print(stations_metrics)
