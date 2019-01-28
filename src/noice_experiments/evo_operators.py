@@ -76,9 +76,9 @@ def mutation(individ, rate, mutation_value_rate):
 
 def initial_population_lhs(size):
     samples_grid = lhs(PARAMS, size, 'center')
-
+    print(samples_grid)
     for idx, params_range in enumerate([drf_range, cfw_range, stpm_range]):
-        samples_grid[:, idx] = norm(loc=np.mean(params_range), scale=np.var(params_range)).ppf(samples_grid[:, idx])
+        samples_grid[:, idx] = norm(loc=np.mean(params_range), scale=np.std(params_range)).ppf(samples_grid[:, idx])
 
     population = [SWANParams(drf=sample[0], cfw=sample[1], stpm=sample[2]) for sample in samples_grid]
 
