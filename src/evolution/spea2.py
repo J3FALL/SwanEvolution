@@ -84,7 +84,7 @@ class SPEA2:
         while gen < self.params.max_gens:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
-            archive_history.append(self._archive)
+            archive_history.append(self._pop)
 
             best = sorted(self._archive, key=lambda p: p.fitness())[0]
             last_fit = history.last().fitness_value

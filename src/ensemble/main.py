@@ -17,7 +17,7 @@ from src.noice_experiments.model import (
 from src.utils.files import (
     real_obs_from_files,
     wave_watch_results)
-from src.utils.vis import plot_results
+from src.utils.vis import plot_results, plot_population_movement
 
 
 def optimize():
@@ -38,8 +38,8 @@ def optimize():
                    path_to_forecasts='../../../wind-noice-runs/results_fixed',
                    stations_to_out=stations, error=error_rmse_all)
 
-    history, _ = SPEA2(
-        params=SPEA2.Params(max_gens=100, pop_size=10, archive_size=5,
+    history, archive_history = SPEA2(
+        params=SPEA2.Params(max_gens=30, pop_size=10, archive_size=2,
                             crossover_rate=0.8, mutation_rate=0.8, mutation_value_rate=[0.1, 0.005, 0.005]),
         init_population=initial_pop_lhs,
         objectives=partial(calculate_objectives_interp, ens),
@@ -61,6 +61,9 @@ def optimize():
     print(base_model.output(params=params))
     observations = real_obs_from_files()
     plot_results(forecasts=forecasts, observations=observations)
+
+    plot_population_movement(archive_history, grid)
+
 
     return history
 
