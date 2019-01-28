@@ -10,18 +10,18 @@ random.seed(datetime.now())
 
 
 class SPEA2:
-    def __init__(self, params, new_individ, objectives, crossover, mutation):
+    def __init__(self, params, init_population, objectives, crossover, mutation):
         '''
          Strength Pareto Evolutionary Algorithm
         :param params: Meta-parameters of the SPEA2
-        :param new_individ: function to generate new individuals for population
+        :param init_population: function to generate initial population
         :param objectives: function to calculate objective functions for each individual in population
         :param crossover: function to crossover two genotypes
         :param mutation: function to mutate genotype
         '''
         self.params = params
 
-        self.new_individ = new_individ
+        self.init_population = init_population
         self.objectives = objectives
         self.crossover = crossover
         self.mutation = mutation
@@ -29,7 +29,8 @@ class SPEA2:
         self._init_populations()
 
     def _init_populations(self):
-        self._pop = [SPEA2.Individ(genotype=self.new_individ()) for _ in range(self.params.pop_size)]
+        gens = self.init_population(self.params.pop_size)
+        self._pop = [SPEA2.Individ(genotype=gen) for gen in gens]
         self._archive = []
 
     class Params:

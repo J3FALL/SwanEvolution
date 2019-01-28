@@ -74,7 +74,14 @@ def mutation(individ, rate, mutation_value_rate):
     return individ
 
 
-def initial_population_lhs(size):
+import pickle
+
+
+def default_initial_pop(size):
+    return [SWANParams.new_instance() for _ in range(size)]
+
+
+def initial_pop_lhs(size, **kwargs):
     samples_grid = lhs(PARAMS, size, 'center')
     print(samples_grid)
     for idx, params_range in enumerate([drf_range, cfw_range, stpm_range]):
@@ -82,4 +89,19 @@ def initial_population_lhs(size):
 
     population = [SWANParams(drf=sample[0], cfw=sample[1], stpm=sample[2]) for sample in samples_grid]
 
+    if 'dump' in kwargs and kwargs['dump'] is True:
+        dump_population(population, kwargs['file_path'])
+
     return population
+
+
+def initial_pop_lhs_from_file(file_path):
+    with open(file_path, 'rb') as f:
+        population = pickle.load(f)
+        return population
+
+
+def dump_population(population, file_path):
+    pickle_out = open(file_path, 'wb')
+    pickle.dump(population, pickle_out)
+    pickle_out.close()
