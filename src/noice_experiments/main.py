@@ -11,7 +11,8 @@ from src.noice_experiments.errors import (
 from src.noice_experiments.evo_operators import (
     calculate_objectives_interp,
     crossover,
-    mutation
+    mutation,
+    default_initial_pop
 )
 from src.noice_experiments.model import (
     CSVGridFile,
@@ -55,7 +56,7 @@ def optimize_by_real_obs():
     history, archive_history = SPEA2(
         params=SPEA2.Params(max_gens=100, pop_size=10, archive_size=5,
                             crossover_rate=0.8, mutation_rate=0.6, mutation_value_rate=[0.1, 0.005, 0.005]),
-        new_individ=SWANParams.new_instance,
+        init_population=default_initial_pop,
         objectives=partial(calculate_objectives_interp, fake_model),
         crossover=crossover,
         mutation=mutation).solution()
@@ -89,7 +90,7 @@ def optimize_by_ww3_obs(max_gens, pop_size, archive_size, crossover_rate, mutati
         params=SPEA2.Params(max_gens, pop_size=pop_size, archive_size=archive_size,
                             crossover_rate=crossover_rate, mutation_rate=mutation_rate,
                             mutation_value_rate=mutation_value_rate),
-        new_individ=SWANParams.new_instance,
+        init_population=default_initial_pop,
         objectives=partial(calculate_objectives_interp, fake),
         crossover=crossover,
         mutation=mutation).solution(verbose=True)
@@ -138,7 +139,7 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
             params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size,
                                 crossover_rate=crossover_rate, mutation_rate=mutation_rate,
                                 mutation_value_rate=mutation_value_rate),
-            new_individ=SWANParams.new_instance,
+            init_population=default_initial_pop,
             objectives=partial(calculate_objectives_interp, fake),
             crossover=crossover,
             mutation=mutation).solution(verbose=False)
