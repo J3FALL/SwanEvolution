@@ -95,12 +95,12 @@ class SPEA2:
 
                 history.add_new(best_gens, gen, best.fitness(),
                                 rmse(best))
-            selected = self.selected(self.params.pop_size, self._archive)
-            self._pop = self.reproduce(selected, self.params.pop_size)
-
             to_add = copy.deepcopy(self._pop)
             self.objectives(to_add)
             archive_history.append(to_add)
+
+            selected = self.selected(self.params.pop_size, self._archive)
+            self._pop = self.reproduce(selected, self.params.pop_size)
 
             gen += 1
 

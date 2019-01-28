@@ -143,8 +143,10 @@ class FakeModel:
             np.asarray(self.grid_file.drf_grid), np.asarray(self.grid_file.cfw_grid),
             np.asarray(self.grid_file.stpm_grid))
 
-        interp_mesh = np.array(np.meshgrid(params.drf, params.cfw, params.stpm))
-        interp_points = np.rollaxis(interp_mesh, 0, 4).reshape((1, 3))
+        params_fixed = self._fixed_params(params)
+
+        interp_mesh = np.array(np.meshgrid(params_fixed.drf, params_fixed.cfw, params_fixed.stpm))
+        interp_points = abs(np.rollaxis(interp_mesh, 0, 4).reshape((1, 3)))
 
         out = np.zeros(len(self.stations))
         for i in range(0, len(self.stations)):
@@ -153,6 +155,13 @@ class FakeModel:
             out[i] = int_obs
 
         return out
+
+    def _fixed_params(self, params):
+        params_fixed = SWANParams(drf=min(max(params.drf, min(self.grid_file.drf_grid)), max(self.grid_file.drf_grid)),
+                                  cfw=min(max(params.cfw, min(self.grid_file.cfw_grid)), max(self.grid_file.cfw_grid)),
+                                  stpm=min(max(params.stpm, min(self.grid_file.stpm_grid)),
+                                           max(self.grid_file.stpm_grid)))
+        return params_fixed
 
     def output_no_int(self, params):
         drf_idx, cfw_idx, stpm_idx = self.params_idxs(params=params)
