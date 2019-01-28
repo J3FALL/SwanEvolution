@@ -39,7 +39,7 @@ def optimize():
                    stations_to_out=stations, error=error_rmse_all)
 
     history, archive_history = SPEA2(
-        params=SPEA2.Params(max_gens=30, pop_size=10, archive_size=2,
+        params=SPEA2.Params(max_gens=30, pop_size=10, archive_size=5,
                             crossover_rate=0.8, mutation_rate=0.8, mutation_value_rate=[0.1, 0.005, 0.005]),
         init_population=initial_pop_lhs,
         objectives=partial(calculate_objectives_interp, ens),

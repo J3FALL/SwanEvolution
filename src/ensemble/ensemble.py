@@ -46,12 +46,12 @@ class Ensemble:
 
         out = []
         mean_delta = 0.5
+
         for station in statistics_by_stations.keys():
             delta = abs(statistics_by_stations[station]['min'] - statistics_by_stations[station]['max'])
-            # print(delta)
             quality = statistics_by_stations[station]['mean']
 
-            out.append(quality / np.linalg.norm(delta - mean_delta))
+            out.append(quality / np.linalg.norm(np.abs(delta - mean_delta)))
 
         return out
 

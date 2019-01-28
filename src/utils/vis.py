@@ -32,9 +32,6 @@ def plot_population_movement(archive_history, grid):
     max_history = []
     for pop in archive_history:
 
-        for ind in pop:
-            print(ind.objectives)
-
         drf = [individ.genotype.drf for individ in pop]
         cfw = [individ.genotype.cfw for individ in pop]
         stpm = [individ.genotype.stpm for individ in pop]
@@ -71,6 +68,4 @@ def column(matrix, idx):
 
 
 def rmse(vars):
-    if len(vars) == 0:
-        print("?")
     return sqrt(sum([pow(v, 2) for v in vars]) / len(vars))
