@@ -84,7 +84,6 @@ class SPEA2:
         while gen < self.params.max_gens:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
-            archive_history.append(self._pop)
 
             best = sorted(self._archive, key=lambda p: p.fitness())[0]
             last_fit = history.last().fitness_value
@@ -98,6 +97,11 @@ class SPEA2:
                                 rmse(best))
             selected = self.selected(self.params.pop_size, self._archive)
             self._pop = self.reproduce(selected, self.params.pop_size)
+
+            to_add = copy.deepcopy(self._pop)
+            self.objectives(to_add)
+            archive_history.append(to_add)
+
             gen += 1
 
         return history, archive_history

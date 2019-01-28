@@ -29,7 +29,11 @@ def plot_results(forecasts, observations):
 def plot_population_movement(archive_history, grid):
     fig = plt.figure()
     ax = Axes3D(fig)
+    max_history = []
     for pop in archive_history:
+
+        for ind in pop:
+            print(ind.objectives)
 
         drf = [individ.genotype.drf for individ in pop]
         cfw = [individ.genotype.cfw for individ in pop]
@@ -38,17 +42,21 @@ def plot_population_movement(archive_history, grid):
         pop_idx = archive_history.index(pop)
 
         rmse_values = []
+
         max_idx = -1
         for point_idx in range(len(pop)):
             rmse_val = rmse([obj for obj in pop[point_idx].objectives])
             rmse_values.append(rmse_val)
             max_idx = rmse_values.index(max(rmse_values))
+        max_history.append([drf[max_idx], cfw[max_idx], stpm[max_idx]])
+
         for point_idx in range(len(pop)):
             color = 'red' if point_idx is not max_idx else 'blue'
             ax.scatter(drf[point_idx], cfw[point_idx], stpm[point_idx], c=color, s=5)
             ax.text(drf[point_idx], cfw[point_idx], stpm[point_idx], f'{rmse_val:.2f}({pop_idx})', size=10, zorder=1,
                     color='k')
 
+    ax.plot(column(max_history, 0), column(max_history, 1), column(max_history, 2))
     ax.set_xlim(left=min(grid.drf_grid), right=max(grid.drf_grid))
     ax.set_ylim(bottom=min(grid.cfw_grid), top=max(grid.cfw_grid))
     ax.set_zlim(bottom=min(grid.stpm_grid), top=max(grid.stpm_grid))
@@ -58,5 +66,11 @@ def plot_population_movement(archive_history, grid):
     plt.show()
 
 
+def column(matrix, idx):
+    return [row[idx] for row in matrix]
+
+
 def rmse(vars):
+    if len(vars) == 0:
+        print("?")
     return sqrt(sum([pow(v, 2) for v in vars]) / len(vars))

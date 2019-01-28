@@ -12,6 +12,7 @@ from src.noice_experiments.evo_operators import (
     calculate_objectives_interp,
     crossover,
     mutation,
+    initial_pop_lhs,
     default_initial_pop
 )
 from src.noice_experiments.model import (
@@ -139,7 +140,7 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
             params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size,
                                 crossover_rate=crossover_rate, mutation_rate=mutation_rate,
                                 mutation_value_rate=mutation_value_rate),
-            init_population=default_initial_pop,
+            init_population=initial_pop_lhs,
             objectives=partial(calculate_objectives_interp, fake),
             crossover=crossover,
             mutation=mutation).solution(verbose=False)

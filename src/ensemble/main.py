@@ -64,7 +64,6 @@ def optimize():
 
     plot_population_movement(archive_history, grid)
 
-
     return history
 
 
