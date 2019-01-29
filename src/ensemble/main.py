@@ -236,7 +236,8 @@ exptime = str(datetime.datetime.now().time()).replace(":", "-")
 exp_id = 0
 iter_id = 0
 with open(f'../exp-res-rob-{exptime}.csv', 'w', newline='') as csvfile:
-    fieldnames = ['ID', 'IterId', 'SetId', 'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
+    fieldnames = ['ID', 'IterId', 'SetId', 'drf', 'cfw', 'stpm',
+                  'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
     writer.writeheader()
@@ -258,12 +259,16 @@ for rep in rep_range:
         with open(f'../exp-res-rob-{exptime}.csv', 'a', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writerow({'ID': exp_id, 'IterId': iter_id, 'SetId': set_id,
+                             'drf': best.genotype.drf,
+                             'cfw': best.genotype.cfw,
+                             'stpm': best.genotype.stpm,
                              'st1': stations_metrics[0], 'st2': stations_metrics[1],
                              'st3': stations_metrics[2],
                              'st4': stations_metrics[3], 'st5': stations_metrics[4],
                              'st6': stations_metrics[5],
                              'st7': stations_metrics[6], 'st8': stations_metrics[7],
                              'st9': stations_metrics[8]})
+            exp_id += 1
         exp_id += 1
     iter_id += 1
 
