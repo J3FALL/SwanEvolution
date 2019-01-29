@@ -5,7 +5,7 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
 
-def plot_results(forecasts, observations):
+def plot_results(forecasts, observations, **kwargs):
     # assert len(observations) == len(forecasts) == 3
 
     fig, axs = plt.subplots(3, 3)
@@ -14,7 +14,7 @@ def plot_results(forecasts, observations):
     obs_series = []
     for obs in observations:
         obs_series.append(obs.time_series(from_date="20140814.120000", to_date="20140915.000000")[:len(time)])
-    for idx in range(len(forecasts)):
+    for idx in range(min(len(forecasts), len(observations))):
         i, j = divmod(idx, 3)
         station_idx = observations[idx].station_idx
         axs[i, j].plot(time, obs_series[idx],
@@ -23,7 +23,13 @@ def plot_results(forecasts, observations):
                        label=f'Predicted, Station {station_idx}')
         axs[i, j].legend()
 
-    plt.show()
+    if 'save' in kwargs and kwargs['save'] is True:
+        file_path = kwargs['file_path']
+        fig.set_size_inches((11, 11), forward=False)
+        fig.savefig(f'{file_path}.png', dpi=200)
+        plt.close()
+    else:
+        plt.show()
 
 
 def plot_population_movement(archive_history, grid):
