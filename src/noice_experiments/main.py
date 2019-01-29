@@ -32,7 +32,7 @@ from src.utils.vis import (
 random.seed(42)
 
 
-def get_metrics_for_all_stations(forecasts, observations):
+def get_rmse_for_all_stations(forecasts, observations):
     # assert len(observations) == len(forecasts) == 3
 
     time = np.linspace(1, 253, num=len(forecasts[0].hsig_series))
@@ -120,7 +120,8 @@ def optimize_by_ww3_obs(max_gens, pop_size, archive_size, crossover_rate, mutati
     return history
 
 
-def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate, stations):
+def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate, stations,
+                      repeats):
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
     ww3_obs = \
@@ -129,13 +130,38 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
     fake = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
-    fake_all = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=[1, 2, 3, 4, 5, 6, 7, 8, 9],
+    ww3_obs_all = \
+        [obs.time_series() for obs in
+         wave_watch_results(path_to_results='../../samples/ww-res/', stations=[1, 2, 3, 4, 5, 6, 7, 8, 9])]
+
+    fake_all = FakeModel(grid_file=grid, observations=ww3_obs_all, stations_to_out=[1, 2, 3, 4, 5, 6, 7, 8, 9],
                          error=error_rmse_all,
                          forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
+    closest_hist = fake.closest_params(params=SWANParams(drf=1.0,
+                                                    cfw=0.015,
+                                                    stpm=0.00302))
+    closest_params_set_hist = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
+
+    for row in grid.rows:
+
+        if set(row.model_params.params_list()) == set(closest_params_set_hist.params_list()):
+            drf_idx, cfw_idx, stpm_idx = fake.params_idxs(row.model_params)
+            forecasts_ref = fake_all.grid[drf_idx, cfw_idx, stpm_idx]
+            print("index : %d" % grid.rows.index(row))
+            break
+
+
+    ref_metrics = get_rmse_for_all_stations(forecasts_ref, wave_watch_results(path_to_results='../../samples/ww-res/',
+                                                                           stations=[1, 2, 3, 4, 5, 6, 7, 8, 9]))
+
+
     obtained_params = []
     obtained_metrics = []
-    for t in range(1, 20):
+
+    all_stat_metrics=np.zeros(9)
+
+    for t in range(1, repeats+1):
         history, _ = SPEA2(
             params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size,
                                 crossover_rate=crossover_rate, mutation_rate=mutation_rate,
@@ -166,6 +192,11 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
                 # plot_results(forecasts=forecasts,
                 #             observations=wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations),
                 #             optimization_history=history)
+
+        all_stat_metrics += get_rmse_for_all_stations(forecasts,
+                                                      wave_watch_results(path_to_results='../../samples/ww-res/',
+                                                                           stations=[1, 2, 3, 4, 5, 6, 7, 8, 9]))
+    all_stat_metrics=all_stat_metrics/repeats
 
     print("ROBUSTNESS METRICS")
     print("DRAG SD, %")
@@ -198,11 +229,9 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
 
     params_r = (drag_sdm * cfw_sdm * stpm_sdm)
 
-    all_stat_metrics = get_metrics_for_all_stations(forecasts,
-                                                    wave_watch_results(path_to_results='../../samples/ww-res/',
-                                                                       stations=[1, 2, 3, 4, 5, 6, 7, 8, 9]))
 
-    return [result_td, metrics_td, metrics_q, params_r, history.last(), all_stat_metrics]
+
+    return [result_td, metrics_td, metrics_q, params_r, history.last(), all_stat_metrics, ref_metrics]
 
 
 # optimize_by_real_obs()
@@ -233,20 +262,56 @@ objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
 
 papam_for_run = objective_manual
 
-stations_for_run_set = [[1], [1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 2, 3, 4, 5, 6, 7, 8, 9]]
-stations_metrics = [np.zeros(9), np.zeros(9), np.zeros(9), np.zeros(9), np.zeros(9)]
+stations_for_run_set = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
+                        [1, 2], [2, 3], [3, 4], [4, 5], [6, 7], [7, 8], [8, 9],
+                        [1, 2, 3], [4, 5, 6], [7, 8, 9],
+                        [1, 2, 3, 4], [5, 6, 7, 8], [1, 2, 8, 9],
+                        [1, 2, 3, 4, 5], [1, 6, 7, 8, 9],
+                        [1, 2, 3, 4, 5, 6], [4, 5, 6, 7, 8, 9],
+                        [1, 2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8, 9],
+                        [1, 2, 3, 4, 5, 6, 7, 8], [2, 3, 4, 5, 6, 7, 8, 9],
+                        [1, 2, 3, 4, 5, 6, 7, 8, 9]]
+stations_metrics = np.zeros(9)
 
-for i in range(0, len(stations_for_run_set)):
-    stations_for_run = stations_for_run_set[i]
-    res = run_robustess_exp(papam_for_run['max_gens'], papam_for_run['pop_size'],
-                            round(papam_for_run['archive_size_rate'] * papam_for_run['pop_size']),
-                            papam_for_run['crossover_rate'],
-                            papam_for_run['mutation_rate'],
-                            [papam_for_run['mutation_p1'], papam_for_run['mutation_p2'],
-                             papam_for_run['mutation_p3']], stations_for_run)
-    best = res[4]
+import datetime
+import csv
 
-    stations_metrics[i][0:9
-    ] = res[5]
+exptime = str(datetime.datetime.now().time()).replace(":", "-")
+
+exp_id = 0
+iter_id = 0
+with open(f'../exp-res-{exptime}.csv', 'w', newline='') as csvfile:
+    fieldnames = ['ID', 'IterId', 'SetId', 'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+    writer.writeheader()
+
+rep_range = range(0, 10)
+for rep in rep_range:
+    for set_id in range(0, len(stations_for_run_set)):
+        stations_for_run = stations_for_run_set[set_id]
+        res = run_robustess_exp(papam_for_run['max_gens'], papam_for_run['pop_size'],
+                                round(papam_for_run['archive_size_rate'] * papam_for_run['pop_size']),
+                                papam_for_run['crossover_rate'],
+                                papam_for_run['mutation_rate'],
+                                [papam_for_run['mutation_p1'], papam_for_run['mutation_p2'],
+                                 papam_for_run['mutation_p3']], stations_for_run, 10)
+        best = res[4]
+        ref_metrics = res[6]
+
+        stations_metrics[0:9] = res[5] / ref_metrics
+        with open(f'../exp-res-{exptime}.csv', 'a', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writerow({'ID': exp_id, 'IterId': iter_id, 'SetId': set_id,
+                             'st1': stations_metrics[0], 'st2': stations_metrics[1],
+                             'st3': stations_metrics[2],
+                             'st4': stations_metrics[3], 'st5': stations_metrics[4],
+                             'st6': stations_metrics[5],
+                             'st7': stations_metrics[6], 'st8': stations_metrics[7],
+                             'st9': stations_metrics[8]})
+        exp_id += 1
+    iter_id += 1
 
 print(stations_metrics)
+
+############
