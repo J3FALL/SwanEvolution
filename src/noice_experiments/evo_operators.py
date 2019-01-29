@@ -1,3 +1,4 @@
+import pickle
 import random
 
 import numpy as np
@@ -72,9 +73,6 @@ def mutation(individ, rate, mutation_value_rate):
             individ.stpm += sign * mutation_value_rate[2] * mutation_ratio
             individ.stpm = abs(individ.stpm)
     return individ
-
-
-import pickle
 
 
 def default_initial_pop(size):
