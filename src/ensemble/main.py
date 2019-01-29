@@ -210,7 +210,7 @@ objective_tradeoff = {'a': 0, 'archive_size_rate': 0.35157832568915776, 'crossov
                       'mutation_p3': 0.0008306686136608031, 'mutation_rate': 0.2696660952766096, 'pop_size': 17}
 
 objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
-                    'max_gens': 10, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
+                    'max_gens': 30, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
                     'mutation_p3': 0.001, 'mutation_rate': 0.5, 'pop_size': 20}
 
 papam_for_run = objective_manual
@@ -250,7 +250,7 @@ for rep in rep_range:
                                 papam_for_run['crossover_rate'],
                                 papam_for_run['mutation_rate'],
                                 [papam_for_run['mutation_p1'], papam_for_run['mutation_p2'],
-                                 papam_for_run['mutation_p3']], stations_for_run, 10)
+                                 papam_for_run['mutation_p3']], stations_for_run, 1)
         best = res[4]
         ref_metrics = res[6]
 
