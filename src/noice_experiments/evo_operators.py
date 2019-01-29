@@ -60,7 +60,7 @@ def mutation(individ, rate, mutation_value_rate):
     params = ['drf', 'cfw', 'stpm']
     if random.random() >= rate:
         param_to_mutate = params[random.randint(0, 2)]
-        mutation_ratio = abs(np.random.normal(0, 5, 1)[0])
+        mutation_ratio = abs(np.random.normal(1, 5, 1)[0])
 
         sign = 1 if random.random() < 0.5 else -1
         if param_to_mutate is 'drf':
@@ -81,7 +81,6 @@ def default_initial_pop(size):
 
 def initial_pop_lhs(size, **kwargs):
     samples_grid = lhs(PARAMS, size, 'center')
-    print(samples_grid)
     for idx, params_range in enumerate([drf_range, cfw_range, stpm_range]):
         samples_grid[:, idx] = norm(loc=np.mean(params_range), scale=np.std(params_range)).ppf(samples_grid[:, idx])
 
