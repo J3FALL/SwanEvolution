@@ -23,7 +23,10 @@ from src.noice_experiments.model import (
 )
 from src.utils.files import (
     wave_watch_results)
-from src.utils.vis import plot_results
+from src.utils.vis import (
+    plot_results,
+    plot_population_movement
+)
 
 
 def get_rmse_for_all_stations(forecasts, observations):
@@ -45,24 +48,21 @@ def get_rmse_for_all_stations(forecasts, observations):
 def optimize():
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-    # stations = [1, 2, 3]
-    stations = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    stations = [7, 8, 9]
+    # stations = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     obs = \
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
-
-    # obs = [obs.time_series(from_date="20140814.120000", to_date="20140915.000000") for obs in
-    #        real_obs_from_files()]
 
     base_model = FakeModel(grid_file=grid, observations=obs, stations_to_out=stations, error=error_rmse_all,
                            forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
-    ens = Ensemble(grid=grid, noise_cases=[1, 15, 25, 26], observations=obs,
+    ens = Ensemble(grid=grid, noise_cases=[1, 2, 15, 16, 17, 25, 26], observations=obs,
                    path_to_forecasts='../../../wind-noice-runs/results_fixed',
                    stations_to_out=stations, error=error_rmse_all)
 
     history, archive_history = SPEA2(
-        params=SPEA2.Params(max_gens=50, pop_size=10, archive_size=5,
-                            crossover_rate=0.8, mutation_rate=0.8, mutation_value_rate=[0.1, 0.005, 0.005]),
+        params=SPEA2.Params(max_gens=100, pop_size=10, archive_size=5,
+                            crossover_rate=0.8, mutation_rate=0.6, mutation_value_rate=[0.1, 0.005, 0.0005]),
         init_population=initial_pop_lhs,
         objectives=partial(calculate_objectives_interp, ens),
         crossover=crossover,
@@ -85,7 +85,7 @@ def optimize():
     observations = wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)
     plot_results(forecasts=forecasts, observations=observations)
 
-    # plot_population_movement(archive_history, grid)
+    plot_population_movement(archive_history, grid)
 
     return history
 
@@ -219,61 +219,67 @@ objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
                     'max_gens': 30, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
                     'mutation_p3': 0.001, 'mutation_rate': 0.5, 'pop_size': 20}
 
-papam_for_run = objective_manual
 
-stations_for_run_set = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
-                        [1, 2], [2, 3], [3, 4], [4, 5], [6, 7], [7, 8], [8, 9],
-                        [1, 2, 3], [4, 5, 6], [7, 8, 9],
-                        [1, 2, 3, 4], [5, 6, 7, 8], [1, 2, 8, 9],
-                        [1, 2, 3, 4, 5], [1, 6, 7, 8, 9],
-                        [1, 2, 3, 4, 5, 6], [4, 5, 6, 7, 8, 9],
-                        [1, 2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8, 9],
-                        [1, 2, 3, 4, 5, 6, 7, 8], [2, 3, 4, 5, 6, 7, 8, 9],
-                        [1, 2, 3, 4, 5, 6, 7, 8, 9]]
-stations_metrics = np.zeros(9)
+def robustness_statistics():
+    papam_for_run = objective_manual
 
-exptime = str(datetime.datetime.now().time()).replace(":", "-")
+    stations_for_run_set = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
+                            [1, 2], [2, 3], [3, 4], [4, 5], [6, 7], [7, 8], [8, 9],
+                            [1, 2, 3], [4, 5, 6], [7, 8, 9],
+                            [1, 2, 3, 4], [5, 6, 7, 8], [1, 2, 8, 9],
+                            [1, 2, 3, 4, 5], [1, 6, 7, 8, 9],
+                            [1, 2, 3, 4, 5, 6], [4, 5, 6, 7, 8, 9],
+                            [1, 2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8, 9],
+                            [1, 2, 3, 4, 5, 6, 7, 8], [2, 3, 4, 5, 6, 7, 8, 9],
+                            [1, 2, 3, 4, 5, 6, 7, 8, 9]]
+    stations_metrics = np.zeros(9)
 
-exp_id = 0
-iter_id = 0
-with open(f'../exp-res-rob-{exptime}.csv', 'w', newline='') as csvfile:
-    fieldnames = ['ID', 'IterId', 'SetId', 'drf', 'cfw', 'stpm',
-                  'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    exptime = str(datetime.datetime.now().time()).replace(":", "-")
 
-    writer.writeheader()
+    exp_id = 0
+    iter_id = 0
+    with open(f'../exp-res-rob-{exptime}.csv', 'w', newline='') as csvfile:
+        fieldnames = ['ID', 'IterId', 'SetId', 'drf', 'cfw', 'stpm',
+                      'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-rep_range = range(0, 10)
-os.mkdir(os.path.join('..', exptime))
+        writer.writeheader()
 
-for rep in rep_range:
-    for set_id in range(0, len(stations_for_run_set)):
-        stations_for_run = stations_for_run_set[set_id]
-        res = run_robustess_exp_ens(papam_for_run['max_gens'], papam_for_run['pop_size'],
-                                    round(papam_for_run['archive_size_rate'] * papam_for_run['pop_size']),
-                                    papam_for_run['crossover_rate'],
-                                    papam_for_run['mutation_rate'],
-                                    [papam_for_run['mutation_p1'], papam_for_run['mutation_p2'],
-                                     papam_for_run['mutation_p3']], stations_for_run, 1,
-                                    figure_path=os.path.join('..', exptime, str(exp_id)))
-        best = res[4]
-        ref_metrics = res[6]
+    rep_range = range(0, 10)
+    os.mkdir(os.path.join('..', exptime))
 
-        stations_metrics[0:9] = res[5] / ref_metrics
-        with open(f'../exp-res-rob-{exptime}.csv', 'a', newline='') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writerow({'ID': exp_id, 'IterId': iter_id, 'SetId': set_id,
-                             'drf': best.genotype.drf,
-                             'cfw': best.genotype.cfw,
-                             'stpm': best.genotype.stpm,
-                             'st1': stations_metrics[0], 'st2': stations_metrics[1],
-                             'st3': stations_metrics[2],
-                             'st4': stations_metrics[3], 'st5': stations_metrics[4],
-                             'st6': stations_metrics[5],
-                             'st7': stations_metrics[6], 'st8': stations_metrics[7],
-                             'st9': stations_metrics[8]})
+    for rep in rep_range:
+        for set_id in range(0, len(stations_for_run_set)):
+            stations_for_run = stations_for_run_set[set_id]
+            res = run_robustess_exp_ens(papam_for_run['max_gens'], papam_for_run['pop_size'],
+                                        round(papam_for_run['archive_size_rate'] * papam_for_run['pop_size']),
+                                        papam_for_run['crossover_rate'],
+                                        papam_for_run['mutation_rate'],
+                                        [papam_for_run['mutation_p1'], papam_for_run['mutation_p2'],
+                                         papam_for_run['mutation_p3']], stations_for_run, 1,
+                                        figure_path=os.path.join('..', exptime, str(exp_id)))
+            best = res[4]
+            ref_metrics = res[6]
+
+            stations_metrics[0:9] = res[5] / ref_metrics
+            with open(f'../exp-res-rob-{exptime}.csv', 'a', newline='') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writerow({'ID': exp_id, 'IterId': iter_id, 'SetId': set_id,
+                                 'drf': best.genotype.drf,
+                                 'cfw': best.genotype.cfw,
+                                 'stpm': best.genotype.stpm,
+                                 'st1': stations_metrics[0], 'st2': stations_metrics[1],
+                                 'st3': stations_metrics[2],
+                                 'st4': stations_metrics[3], 'st5': stations_metrics[4],
+                                 'st6': stations_metrics[5],
+                                 'st7': stations_metrics[6], 'st8': stations_metrics[7],
+                                 'st9': stations_metrics[8]})
+                exp_id += 1
             exp_id += 1
-        exp_id += 1
-    iter_id += 1
+        iter_id += 1
 
-print(stations_metrics)
+    print(stations_metrics)
+
+
+# robustness_statistics()
+optimize()
