@@ -139,8 +139,8 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
                          forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
     closest_hist = fake.closest_params(params=SWANParams(drf=1.0,
-                                                    cfw=0.015,
-                                                    stpm=0.00302))
+                                                         cfw=0.015,
+                                                         stpm=0.00302))
     closest_params_set_hist = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
 
     for row in grid.rows:
@@ -151,17 +151,15 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
             print("index : %d" % grid.rows.index(row))
             break
 
-
     ref_metrics = get_rmse_for_all_stations(forecasts_ref, wave_watch_results(path_to_results='../../samples/ww-res/',
-                                                                           stations=[1, 2, 3, 4, 5, 6, 7, 8, 9]))
-
+                                                                              stations=[1, 2, 3, 4, 5, 6, 7, 8, 9]))
 
     obtained_params = []
     obtained_metrics = []
 
-    all_stat_metrics=np.zeros(9)
+    all_stat_metrics = np.zeros(9)
 
-    for t in range(1, repeats+1):
+    for t in range(1, repeats + 1):
         history, _ = SPEA2(
             params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size,
                                 crossover_rate=crossover_rate, mutation_rate=mutation_rate,
@@ -195,8 +193,8 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
 
         all_stat_metrics += get_rmse_for_all_stations(forecasts,
                                                       wave_watch_results(path_to_results='../../samples/ww-res/',
-                                                                           stations=[1, 2, 3, 4, 5, 6, 7, 8, 9]))
-    all_stat_metrics=all_stat_metrics/repeats
+                                                                         stations=[1, 2, 3, 4, 5, 6, 7, 8, 9]))
+    all_stat_metrics = all_stat_metrics / repeats
 
     print("ROBUSTNESS METRICS")
     print("DRAG SD, %")
@@ -229,8 +227,6 @@ def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation
 
     params_r = (drag_sdm * cfw_sdm * stpm_sdm)
 
-
-
     return [result_td, metrics_td, metrics_q, params_r, history.last(), all_stat_metrics, ref_metrics]
 
 
@@ -257,7 +253,7 @@ objective_tradeoff = {'a': 0, 'archive_size_rate': 0.35157832568915776, 'crossov
                       'mutation_p3': 0.0008306686136608031, 'mutation_rate': 0.2696660952766096, 'pop_size': 17}
 
 objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
-                    'max_gens': 10, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
+                    'max_gens': 30, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
                     'mutation_p3': 0.001, 'mutation_rate': 0.5, 'pop_size': 20}
 
 papam_for_run = objective_manual
@@ -281,7 +277,8 @@ exptime = str(datetime.datetime.now().time()).replace(":", "-")
 exp_id = 0
 iter_id = 0
 with open(f'../exp-res-{exptime}.csv', 'w', newline='') as csvfile:
-    fieldnames = ['ID', 'IterId', 'SetId', 'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
+    fieldnames = ['ID', 'IterId', 'SetId', 'drf', 'cfw', 'stpm',
+                  'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
     writer.writeheader()
@@ -295,7 +292,7 @@ for rep in rep_range:
                                 papam_for_run['crossover_rate'],
                                 papam_for_run['mutation_rate'],
                                 [papam_for_run['mutation_p1'], papam_for_run['mutation_p2'],
-                                 papam_for_run['mutation_p3']], stations_for_run, 10)
+                                 papam_for_run['mutation_p3']], stations_for_run, 1)
         best = res[4]
         ref_metrics = res[6]
 
@@ -303,6 +300,9 @@ for rep in rep_range:
         with open(f'../exp-res-{exptime}.csv', 'a', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writerow({'ID': exp_id, 'IterId': iter_id, 'SetId': set_id,
+                             'drf': best.genotype.drf,
+                             'cfw': best.genotype.cfw,
+                             'stpm': best.genotype.stpm,
                              'st1': stations_metrics[0], 'st2': stations_metrics[1],
                              'st3': stations_metrics[2],
                              'st4': stations_metrics[3], 'st5': stations_metrics[4],
