@@ -21,6 +21,9 @@ def plot_results(forecasts, observations, **kwargs):
                        label=f'Observations, Station {station_idx}')
         axs[i, j].plot(time, forecasts[idx].hsig_series,
                        label=f'Predicted, Station {station_idx}')
+        if 'baseline' in kwargs:
+            axs[i, j].plot(time, kwargs['baseline'][idx].hsig_series,
+                           label=f'Baseline, Station {station_idx}')
         axs[i, j].legend()
 
     if 'save' in kwargs and kwargs['save'] is True:

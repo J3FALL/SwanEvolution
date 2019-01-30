@@ -8,6 +8,8 @@ import numpy as np
 
 random.seed(datetime.now())
 
+from src.evolution.raw_fitness import raw_fitness
+
 
 class SPEA2:
     def __init__(self, params, init_population, objectives, crossover, mutation):
@@ -51,8 +53,9 @@ class SPEA2:
             self.density = 0
 
         def fitness(self):
-            # return self.raw_fitness + self.density
-            return mean_obj(self)
+            # print(self.raw_fitness + self.density)
+            return self.raw_fitness + self.density
+            # return mean_obj(self)
 
         def weighted_sum(self):
             return sum(list(self.objectives))
@@ -84,16 +87,18 @@ class SPEA2:
         while gen < self.params.max_gens:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
-
-            best = sorted(self._archive, key=lambda p: p.fitness())[0]
+            # print('fitness: ', np.mean([p.fitness() for p in self._pop]))
+            # print('obj: ', np.mean([mean_obj(p) for p in self._pop]))
+            best = sorted(self._archive, key=lambda p: mean_obj(p))[0]
+            # print("best: ", mean_obj(best))
             last_fit = history.last().fitness_value
-            if last_fit > best.fitness():
+            if last_fit > mean_obj(best):
                 best_gens = best.genotype
 
                 if verbose:
                     print_new_best_individ(best, gen)
 
-                history.add_new(best_gens, gen, best.fitness(),
+                history.add_new(best_gens, gen, mean_obj(best),
                                 rmse(best))
 
             selected = self.selected(self.params.pop_size, self._archive)
@@ -110,10 +115,13 @@ class SPEA2:
     def fitness(self):
         self.objectives(self._pop)
         union = self._archive + self._pop
-        self.calculate_dominated(union)
+        # self.calculate_dominated(union)
+
+        raw_values = raw_fitness(union)
+        for idx in range(len(union)):
+            union[idx].raw_fitness = raw_values[idx]
 
         for p in union:
-            p.raw_fitness = self.calculate_raw_fitness(p, union)
             p.density = self.calculate_density(p, union)
 
     def calculate_dominated(self, pop):
@@ -256,5 +264,6 @@ def print_new_best_individ(best, gen_index):
     print("new best: ", round(best.fitness(), 5), round(best.genotype.drf, 2),
           round(best.genotype.cfw, 6),
           round(best.genotype.stpm, 6),
-          round(rmse(best), 4))
+          round(rmse(best), 4),
+          mean_obj(best))
     print(gen_index)
