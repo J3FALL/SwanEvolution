@@ -38,18 +38,27 @@ class Ensemble:
     def output(self, params):
         predictions = [model.output(params=params) for model in self.models]
 
+
+
         statistics_by_stations = {}
         for station_idx in range(len(self.stations_to_out)):
-            statistics_by_stations[station_idx] = {'min': min(column(predictions, station_idx)),
-                                                   'max': max(column(predictions, station_idx)),
-                                                   'mean': sum(column(predictions, station_idx)) / len(predictions)}
+            predictions_for_station=column(predictions, station_idx)
+
+            predictions_coeff = 1-abs(predictions_for_station / predictions_for_station[0]-1)
+
+            predictions_for_station = predictions_for_station * predictions_coeff + predictions_for_station[0]*(1-predictions_coeff)
+
+            statistics_by_stations[station_idx] = {'min': min(predictions_for_station),
+                                                   'max': max(predictions_for_station),
+                                                  # 'iqr95': np.percentile(column(predictions, station_idx),[97.5 ,2.5]),
+                                                   'mean': sum(predictions_for_station) / len(predictions_for_station)}
 
         out = []
         for station in statistics_by_stations.keys():
             delta = abs(statistics_by_stations[station]['min'] - statistics_by_stations[station]['max'])
             quality = statistics_by_stations[station]['mean']
 
-            out.append(np.exp(delta) * quality)
+            out.append(delta + quality)
 
         return out
 

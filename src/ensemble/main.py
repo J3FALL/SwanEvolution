@@ -163,10 +163,10 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
                 print("index : %d" % grid.rows.index(row))
                 break
 
-        plot_results(forecasts=forecasts,
-                     observations=wave_watch_results(path_to_results='../../samples/ww-res/',
-                                                     stations=stations),
-                     save=True, file_path=kwargs['figure_path'])
+        # plot_results(forecasts=forecasts,
+        #             observations=wave_watch_results(path_to_results='../../samples/ww-res/',
+        #                                             stations=stations),
+        #             save=True, file_path=kwargs['figure_path'])
         all_stat_metrics += get_rmse_for_all_stations(forecasts,
                                                       wave_watch_results(path_to_results='../../samples/ww-res/',
                                                                          stations=[1, 2, 3, 4, 5, 6, 7, 8, 9]))
@@ -206,8 +206,7 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
     return [result_td, metrics_td, metrics_q, params_r, history.last(), all_stat_metrics, ref_metrics]
 
 
-
-#optimize()
+# optimize()
 
 objective_robustparams = {'a': 0, 'archive_size_rate': 0.3516265476722533, 'crossover_rate': 0.7194075160834003,
                           'max_gens': 3, 'mutation_p1': 0.18530572116666033, 'mutation_p2': 0.008275074614718868,
@@ -240,14 +239,23 @@ def robustness_statistics():
                             [1, 2, 3, 4, 5, 6, 7, 8, 9]]
 
     stations_for_run_set2 = [[1],
-                            [1, 2],
-                            [1, 2, 3],
-                            [1, 2, 3, 4],
-                            [1, 2, 3, 4, 5],
-                            [1, 2, 3, 4, 5, 6],
-                            [1, 2, 3, 4, 5, 6, 7],
-                            [1, 2, 3, 4, 5, 6, 7, 8],
-                            [1, 2, 3, 4, 5, 6, 7, 8, 9]]
+                             [1, 2],
+                             [1, 2, 3],
+                             [1, 2, 3, 4],
+                             [1, 2, 3, 4, 5],
+                             [1, 2, 3, 4, 5, 6],
+                             [4],
+                             [4, 5],
+                             [4, 5, 6],
+                             [4, 5, 6, 7],
+                             [4, 5, 6, 7, 8],
+                             [4, 5, 6, 7, 8, 9],
+                             [1],
+                             [1, 2],
+                             [1, 3, 3],
+                             [1, 1, 3, 7],
+                             [1, 2, 3, 7, 8],
+                             [1, 2, 3, 7, 8, 9]]
     stations_metrics = np.zeros(9)
 
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
@@ -298,4 +306,4 @@ def robustness_statistics():
 
 
 robustness_statistics()
-#optimize()
+# optimize()

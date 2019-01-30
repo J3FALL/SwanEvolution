@@ -270,14 +270,23 @@ def robustness_statistics():
                             [1, 2, 3, 4, 5, 6, 7, 8], [2, 3, 4, 5, 6, 7, 8, 9],
                             [1, 2, 3, 4, 5, 6, 7, 8, 9]]
     stations_for_run_set2 = [[1],
-                            [1, 2],
-                            [1, 2, 3],
-                            [1, 2, 3, 4],
-                            [1, 2, 3, 4, 5],
-                            [1, 2, 3, 4, 5, 6],
-                            [1, 2, 3, 4, 5, 6, 7],
-                            [1, 2, 3, 4, 5, 6, 7, 8],
-                            [1, 2, 3, 4, 5, 6, 7, 8, 9]]
+                             [1, 2],
+                             [1, 2, 3],
+                             [1, 2, 3, 4],
+                             [1, 2, 3, 4, 5],
+                             [1, 2, 3, 4, 5, 6],
+                             [4],
+                             [4, 5],
+                             [4, 5, 6],
+                             [4, 5, 6, 7],
+                             [4, 5, 6, 7, 8],
+                             [4, 5, 6, 7, 8, 9],
+                             [1],
+                             [1, 2],
+                             [1, 3, 3],
+                             [1, 1, 3, 7],
+                             [1, 2, 3, 7, 8],
+                             [1, 2, 3, 7, 8, 9]]
     stations_metrics = np.zeros(9)
 
     import datetime
@@ -292,7 +301,7 @@ def robustness_statistics():
                       'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-    writer.writeheader()
+        writer.writeheader()
 
     rep_range = range(0, 10)
     for rep in rep_range:
@@ -324,5 +333,6 @@ def robustness_statistics():
         iter_id += 1
 
     print(stations_metrics)
+
 
 robustness_statistics()
