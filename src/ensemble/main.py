@@ -127,7 +127,7 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
     ref_metrics = get_rmse_for_all_stations(forecasts_ref, wave_watch_results(path_to_results='../../samples/ww-res/',
                                                                               stations=[1, 2, 3, 4, 5, 6, 7, 8, 9]))
 
-    ens = Ensemble(grid=grid, noise_cases=[1, 15, 25, 26], observations=ww3_obs,
+    ens = Ensemble(grid=grid, noise_cases=[1, 2, 15, 16, 17, 25, 26], observations=ww3_obs,
                    path_to_forecasts='../../../wind-noice-runs/results_fixed',
                    stations_to_out=stations, error=error_rmse_all)
 
@@ -224,9 +224,16 @@ objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
                     'max_gens': 30, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
                     'mutation_p3': 0.001, 'mutation_rate': 0.5, 'pop_size': 20}
 
+# SPEA2.Params(max_gens=100, pop_size=10, archive_size=5,
+#              crossover_rate=0.8, mutation_rate=0.6, mutation_value_rate=[0.1, 0.005, 0.0005])
+
+lucky_params = {'a': 0, 'archive_size_rate': 0.5, 'crossover_rate': 0.8,
+                'max_gens': 30, 'mutation_p1': 0.1, 'mutation_p2': 0.005,
+                'mutation_p3': 0.0005, 'mutation_rate': 0.6, 'pop_size': 10}
+
 
 def robustness_statistics():
-    papam_for_run = objective_manual
+    papam_for_run = lucky_params
 
     stations_for_run_set = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
                             [1, 2], [2, 3], [3, 4], [4, 5], [6, 7], [7, 8], [8, 9],
