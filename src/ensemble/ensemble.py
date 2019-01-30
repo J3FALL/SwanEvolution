@@ -1,14 +1,11 @@
 import os
 
-import numpy as np
-
 from src.noice_experiments.model import (
     FakeModel
 )
 
 
 class Ensemble:
-    # TODO: add error function as param?
     def __init__(self, grid, noise_cases, observations, path_to_forecasts, stations_to_out, error):
         '''
         Initialize an ensemble of FakeModels
@@ -38,19 +35,17 @@ class Ensemble:
     def output(self, params):
         predictions = [model.output(params=params) for model in self.models]
 
-
-
         statistics_by_stations = {}
         for station_idx in range(len(self.stations_to_out)):
-            predictions_for_station=column(predictions, station_idx)
+            predictions_for_station = column(predictions, station_idx)
 
-            predictions_coeff = 1-abs(predictions_for_station / predictions_for_station[0]-1)
+            predictions_coeff = 1 - abs(predictions_for_station / predictions_for_station[0] - 1)
 
-            predictions_for_station = predictions_for_station * predictions_coeff + predictions_for_station[0]*(1-predictions_coeff)
+            predictions_for_station = predictions_for_station * predictions_coeff + predictions_for_station[0] * (
+                    1 - predictions_coeff)
 
             statistics_by_stations[station_idx] = {'min': min(predictions_for_station),
                                                    'max': max(predictions_for_station),
-                                                  # 'iqr95': np.percentile(column(predictions, station_idx),[97.5 ,2.5]),
                                                    'mean': sum(predictions_for_station) / len(predictions_for_station)}
 
         out = []

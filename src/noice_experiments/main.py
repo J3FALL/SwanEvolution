@@ -91,7 +91,7 @@ def optimize_by_ww3_obs(max_gens, pop_size, archive_size, crossover_rate, mutati
         params=SPEA2.Params(max_gens, pop_size=pop_size, archive_size=archive_size,
                             crossover_rate=crossover_rate, mutation_rate=mutation_rate,
                             mutation_value_rate=mutation_value_rate),
-        init_population=default_initial_pop,
+        init_population=initial_pop_lhs,
         objectives=partial(calculate_objectives_interp, fake),
         crossover=crossover,
         mutation=mutation).solution(verbose=True)
@@ -334,5 +334,6 @@ def robustness_statistics():
 
     print(stations_metrics)
 
-
-robustness_statistics()
+# robustness_statistics()
+# optimize_by_ww3_obs(max_gens=50, pop_size=10, archive_size=5, crossover_rate=0.6, mutation_rate=0.7,
+# mutation_value_rate=[0.1, 0.005, 0.0005])
