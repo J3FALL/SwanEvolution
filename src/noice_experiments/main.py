@@ -134,13 +134,12 @@ def optimize_by_ww3_obs(max_gens, pop_size, archive_size, crossover_rate, mutati
 
     params = history.last().genotype
 
-    forecasts = []
-
     test_model = model_all_stations()
 
     closest_hist = test_model.closest_params(params)
     closest_params_set_hist = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
 
+    forecasts = []
     for row in grid.rows:
 
         if set(row.model_params.params_list()) == set(closest_params_set_hist.params_list()):
@@ -159,8 +158,8 @@ def optimize_by_ww3_obs(max_gens, pop_size, archive_size, crossover_rate, mutati
     return history
 
 
-def run_robustess_exp(max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate, stations,
-                      **kwargs):
+def run_robustness_exp(max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate, stations,
+                       **kwargs):
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
     ww3_obs = \
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
@@ -307,21 +306,17 @@ def robustness_run(packed_args):
     archive_size = round(param_for_run['archive_size_rate'] * param_for_run['pop_size'])
     mutation_value_rate = [param_for_run['mutation_p1'], param_for_run['mutation_p2'],
                            param_for_run['mutation_p3']]
-    best, metrics, ref_metrics = run_robustess_exp(max_gens=param_for_run['max_gens'],
-                                                   pop_size=param_for_run['pop_size'],
-                                                   archive_size=archive_size,
-                                                   crossover_rate=param_for_run['crossover_rate'],
-                                                   mutation_rate=param_for_run['mutation_rate'],
-                                                   mutation_value_rate=mutation_value_rate,
-                                                   stations=stations_for_run,
-                                                   save_figures=True,
-                                                   figure_path=figure_path)
+    best, metrics, ref_metrics = run_robustness_exp(max_gens=param_for_run['max_gens'],
+                                                    pop_size=param_for_run['pop_size'],
+                                                    archive_size=archive_size,
+                                                    crossover_rate=param_for_run['crossover_rate'],
+                                                    mutation_rate=param_for_run['mutation_rate'],
+                                                    mutation_value_rate=mutation_value_rate,
+                                                    stations=stations_for_run,
+                                                    save_figures=True,
+                                                    figure_path=figure_path)
 
     return best, metrics, ref_metrics
-
-
-# optimize_by_ww3_obs(max_gens=150, pop_size=20, archive_size=5, crossover_rate=0.8, mutation_rate=0.7,
-#                     mutation_value_rate=[0.1, 0.001, 0.0005])
 
 
 if __name__ == '__main__':
