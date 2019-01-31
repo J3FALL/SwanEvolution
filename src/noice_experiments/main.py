@@ -1,8 +1,13 @@
+import csv
+import datetime
 import os
 import random
 from functools import partial
+from itertools import repeat
+from multiprocessing import Pool
 
 import numpy as np
+from tqdm import tqdm
 
 from src.evolution.spea2 import SPEA2
 from src.noice_experiments.errors import (
@@ -222,7 +227,7 @@ objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
 
 
 def robustness_statistics():
-    papam_for_run = objective_manual
+    param_for_run = objective_manual
 
     stations_for_run_set = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
                             [1, 2], [2, 3], [3, 4], [4, 5], [6, 7], [7, 8], [8, 9],
@@ -253,14 +258,9 @@ def robustness_statistics():
                              [1, 2, 3, 7, 8, 9]]
     stations_metrics = np.zeros(9)
 
-    import datetime
-    import csv
-
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
-    os.mkdir(f'../{exptime}')
+    os.mkdir(f'../../{exptime}')
 
-    exp_id = 0
-    iter_id = 0
     with open(f'../exp-res-{exptime}.csv', 'w', newline='') as csvfile:
         fieldnames = ['ID', 'IterId', 'SetId', 'drf', 'cfw', 'stpm',
                       'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
@@ -268,46 +268,61 @@ def robustness_statistics():
 
         writer.writeheader()
 
-    for _ in range(10):
-        for set_id in range(0, len(stations_for_run_set2)):
-            stations_for_run = stations_for_run_set2[set_id]
-            archive_size = round(papam_for_run['archive_size_rate'] * papam_for_run['pop_size'])
-            mutation_value_rate = [papam_for_run['mutation_p1'], papam_for_run['mutation_p2'],
-                                   papam_for_run['mutation_p3']]
-            best, metrics, ref_metrics = run_robustess_exp(max_gens=papam_for_run['max_gens'],
-                                                           pop_size=papam_for_run['pop_size'],
-                                                           archive_size=archive_size,
-                                                           crossover_rate=papam_for_run['crossover_rate'],
-                                                           mutation_rate=papam_for_run['mutation_rate'],
-                                                           mutation_value_rate=mutation_value_rate,
-                                                           stations=stations_for_run,
-                                                           save_figures=True,
-                                                           figure_path=os.path.join('..', exptime, str(exp_id)))
+    cpu_count = 8
+
+    for iteration in range(10):
+        results = []
+        with Pool(processes=cpu_count) as p:
+            runs_total = len(stations_for_run_set2)
+            fig_paths = [os.path.join('../..', exptime, str(iteration * runs_total + run)) for run in range(runs_total)]
+            all_packed_params = []
+            for station, params, fig_path in zip(stations_for_run_set2, repeat(param_for_run), fig_paths):
+                all_packed_params.append([station, params, fig_path])
+
+            with tqdm(total=runs_total) as progress_bar:
+                for _, out in tqdm(enumerate(p.imap_unordered(robustness_run, all_packed_params))):
+                    results.append(out)
+                    progress_bar.update()
+
+        for idx, out in enumerate(results):
+            best, metrics, ref_metrics = out
 
             stations_metrics[0:9] = metrics / ref_metrics
+
             with open(f'../exp-res-{exptime}.csv', 'a', newline='') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writer.writerow({'ID': exp_id, 'IterId': iter_id, 'SetId': set_id,
-                                 'drf': best.genotype.drf,
-                                 'cfw': best.genotype.cfw,
-                                 'stpm': best.genotype.stpm,
-                                 'st1': stations_metrics[0], 'st2': stations_metrics[1],
-                                 'st3': stations_metrics[2],
-                                 'st4': stations_metrics[3], 'st5': stations_metrics[4],
-                                 'st6': stations_metrics[5],
-                                 'st7': stations_metrics[6], 'st8': stations_metrics[7],
-                                 'st9': stations_metrics[8]})
-            exp_id += 1
-        iter_id += 1
 
-    print(stations_metrics)
+                row_to_write = {'ID': iteration * runs_total + idx, 'IterId': iteration, 'SetId': idx,
+                                'drf': best.genotype.drf,
+                                'cfw': best.genotype.cfw,
+                                'stpm': best.genotype.stpm}
+                for station_idx in range(len(metrics)):
+                    key = f'st{station_idx + 1}'
+                    row_to_write.update({key: stations_metrics[station_idx]})
+                writer.writerow(row_to_write)
 
 
-# from tqdm import tqdm
-#
-# for _ in tqdm(range(10)):
-#     robustness_statistics()
+def robustness_run(packed_args):
+    stations_for_run, param_for_run, figure_path = packed_args
+    archive_size = round(param_for_run['archive_size_rate'] * param_for_run['pop_size'])
+    mutation_value_rate = [param_for_run['mutation_p1'], param_for_run['mutation_p2'],
+                           param_for_run['mutation_p3']]
+    best, metrics, ref_metrics = run_robustess_exp(max_gens=param_for_run['max_gens'],
+                                                   pop_size=param_for_run['pop_size'],
+                                                   archive_size=archive_size,
+                                                   crossover_rate=param_for_run['crossover_rate'],
+                                                   mutation_rate=param_for_run['mutation_rate'],
+                                                   mutation_value_rate=mutation_value_rate,
+                                                   stations=stations_for_run,
+                                                   save_figures=True,
+                                                   figure_path=figure_path)
+
+    return best, metrics, ref_metrics
+
+
 # optimize_by_ww3_obs(max_gens=150, pop_size=20, archive_size=5, crossover_rate=0.8, mutation_rate=0.7,
 #                     mutation_value_rate=[0.1, 0.001, 0.0005])
 
-robustness_statistics()
+
+if __name__ == '__main__':
+    robustness_statistics()
