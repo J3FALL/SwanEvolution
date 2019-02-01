@@ -80,7 +80,7 @@ def get_rmse_for_all_stations(forecasts, observations):
 def optimize():
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-    train_stations = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    train_stations = [4, 5, 6]
     ww3_obs = \
         [obs.time_series() for obs in
          wave_watch_results(path_to_results='../../samples/ww-res/', stations=train_stations)]
@@ -132,7 +132,7 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
                                             wave_watch_results(path_to_results='../../samples/ww-res/',
                                                                stations=ALL_STATIONS))
 
-    train_model = Ensemble(grid=grid, noise_cases=[1, 2, 15, 16, 17, 25, 26], observations=ww3_obs,
+    train_model = Ensemble(grid=grid, noise_cases=[0, 1, 2, 15, 16, 17, 25, 26], observations=ww3_obs,
                            path_to_forecasts='../../../wind-noice-runs/results_fixed',
                            stations_to_out=stations, error=error_rmse_all)
 
@@ -187,9 +187,14 @@ objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
                     'max_gens': 30, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
                     'mutation_p3': 0.001, 'mutation_rate': 0.5, 'pop_size': 20}
 
+params_for_luck = {'a': 0, 'max_gens': 100, 'pop_size': 20,
+                   'archive_size_rate': 0.25, 'crossover_rate': 0.8, 'mutation_rate': 0.7,
+                   'mutation_p1': 0.1, 'mutation_p2': 0.001, 'mutation_p3': 0.0005
+                   }
+
 
 def robustness_statistics():
-    param_for_run = objective_manual
+    param_for_run = params_for_luck
 
     stations_for_run_set2 = [[1],
                              [1, 2],
@@ -271,6 +276,10 @@ def robustness_run(packed_args):
                                                        figure_path=figure_path)
 
     return best, metrics, ref_metrics
+
+
+#
+# optimize()
 
 
 if __name__ == '__main__':
