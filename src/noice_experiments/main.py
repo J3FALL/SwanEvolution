@@ -224,37 +224,29 @@ objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
                     'max_gens': 30, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
                     'mutation_p3': 0.001, 'mutation_rate': 0.5, 'pop_size': 20}
 
+stations_for_run_set = [[1],
+                        [1, 2],
+                        [1, 2, 3],
+                        [1, 2, 3, 4],
+                        [1, 2, 3, 4, 5],
+                        [1, 2, 3, 4, 5, 6],
+                        [4],
+                        [4, 5],
+                        [4, 5, 6],
+                        [4, 5, 6, 7],
+                        [4, 5, 6, 7, 8],
+                        [4, 5, 6, 7, 8, 9],
+                        [1],
+                        [1, 2],
+                        [1, 2, 3],
+                        [1, 2, 3, 7],
+                        [1, 2, 3, 7, 8],
+                        [1, 2, 3, 7, 8, 9]]
+
 
 def robustness_statistics():
     param_for_run = objective_manual
 
-    stations_for_run_set = [[1], [2], [3], [4], [5], [6], [7], [8], [9],
-                            [1, 2], [2, 3], [3, 4], [4, 5], [6, 7], [7, 8], [8, 9],
-                            [1, 2, 3], [4, 5, 6], [7, 8, 9],
-                            [1, 2, 3, 4], [5, 6, 7, 8], [1, 2, 8, 9],
-                            [1, 2, 3, 4, 5], [1, 6, 7, 8, 9],
-                            [1, 2, 3, 4, 5, 6], [4, 5, 6, 7, 8, 9],
-                            [1, 2, 3, 4, 5, 6, 7], [3, 4, 5, 6, 7, 8, 9],
-                            [1, 2, 3, 4, 5, 6, 7, 8], [2, 3, 4, 5, 6, 7, 8, 9],
-                            [1, 2, 3, 4, 5, 6, 7, 8, 9]]
-    stations_for_run_set2 = [[1],
-                             [1, 2],
-                             [1, 2, 3],
-                             [1, 2, 3, 4],
-                             [1, 2, 3, 4, 5],
-                             [1, 2, 3, 4, 5, 6],
-                             [4],
-                             [4, 5],
-                             [4, 5, 6],
-                             [4, 5, 6, 7],
-                             [4, 5, 6, 7, 8],
-                             [4, 5, 6, 7, 8, 9],
-                             [1],
-                             [1, 2],
-                             [1, 3, 3],
-                             [1, 1, 3, 7],
-                             [1, 2, 3, 7, 8],
-                             [1, 2, 3, 7, 8, 9]]
     stations_metrics = np.zeros(9)
 
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
@@ -272,10 +264,10 @@ def robustness_statistics():
     for iteration in range(10):
         results = []
         with Pool(processes=cpu_count) as p:
-            runs_total = len(stations_for_run_set2)
+            runs_total = len(stations_for_run_set)
             fig_paths = [os.path.join('../..', exptime, str(iteration * runs_total + run)) for run in range(runs_total)]
             all_packed_params = []
-            for station, params, fig_path in zip(stations_for_run_set2, repeat(param_for_run), fig_paths):
+            for station, params, fig_path in zip(stations_for_run_set, repeat(param_for_run), fig_paths):
                 all_packed_params.append([station, params, fig_path])
 
             with tqdm(total=runs_total) as progress_bar:
@@ -319,5 +311,22 @@ def robustness_run(packed_args):
     return best, metrics, ref_metrics
 
 
+def prepare_all_fake_models():
+    errors = [error_rmse_all, error_dtw_all]
+    grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
+
+    for noise in [0, 1, 2, 15, 16, 17, 25, 26]:
+        for err in errors:
+            for stations in stations_for_run_set:
+                print(f'configure model for: noise = {noise}; error = {err}; stations = {stations}')
+                ww3_obs = \
+                    [obs.time_series() for obs in
+                     wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
+                train_model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations,
+                                        error=err,
+                                        forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=noise)
+
+
 if __name__ == '__main__':
-    robustness_statistics()
+    # robustness_statistics()
+    prepare_all_fake_models()
