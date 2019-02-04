@@ -3,6 +3,8 @@ import os
 import pickle
 import random
 from collections import Counter
+from itertools import repeat
+from multiprocessing import Pool
 
 import numpy as np
 from scipy.interpolate import interpn
@@ -97,17 +99,27 @@ class FakeModel:
         # calc fitness for every point
 
         st_set_id = ("-".join(str(self.stations)))
-        grid_file_path = f'../grid-saved-rmse_{self.noise_run}_st{st_set_id}.pik'
+        grid_file_path = f'../grid-saved-{self.error.__name__}_{self.noise_run}_st{st_set_id}.pik'
 
         if not os.path.isfile(grid_file_path):
-            for i in range(0, self.grid.shape[0]):
-                for j in range(0, self.grid.shape[1]):
-                    for k in range(0, self.grid.shape[2]):
-                        forecasts = [forecast for forecast in self.grid[i, j, k]]
-                        stat_ind = 0
-                        for forecast, observation in zip(forecasts, self.observations):
-                            self.err_grid[i, j, k, stat_ind] = self.error(forecast, observation)
-                            stat_ind = stat_ind + 1
+            grid_idxs = self.__grid_idxs()
+            results = []
+            forecasts = []
+            for i, j, k in grid_idxs:
+                forecasts.append([forecast for forecast in self.grid[i, j, k]])
+
+            all_series = []
+            for fk, obs in zip(forecasts, repeat(self.observations)):
+                all_series.append([fk, obs])
+            cpu_count = 8
+            with Pool(processes=cpu_count) as p:
+                for _, out in enumerate(p.imap_unordered(self._errors_at_point, all_series)):
+                    results.append(out)
+
+            for point, forecast in zip(grid_idxs, results):
+                i, j, k = point
+                for station_idx, series in enumerate(forecast):
+                    self.err_grid[i, j, k, station_idx] = series
 
             pickle_out = open(grid_file_path, 'wb')
             pickle.dump(self.err_grid, pickle_out)
@@ -116,6 +128,22 @@ class FakeModel:
         else:
             with open(grid_file_path, 'rb') as f:
                 self.err_grid = pickle.load(f)
+
+    def __grid_idxs(self):
+        idxs = []
+        for i in range(self.grid.shape[0]):
+            for j in range(self.grid.shape[1]):
+                for k in range(self.grid.shape[2]):
+                    idxs.append([i, j, k])
+        return idxs
+
+    def _errors_at_point(self, packed_values):
+        forecasts, observations = packed_values
+
+        errors = []
+        for forecast, observation in zip(forecasts, observations):
+            errors.append(self.error(forecast, observation))
+        return errors
 
     def _empty_grid(self):
         return np.empty((len(self.grid_file.drf_grid),
