@@ -26,12 +26,11 @@ def error_rmse_all(forecast, observations):
     '''
 
     result = 0.0
-    penalty_var = abs((np.var(observations) - np.var(forecast.hsig_series)) / np.var(observations)) + 1
 
     for pred, obs in zip(forecast.hsig_series, observations):
         result += pow(pred - obs, 2)
 
-    return sqrt(result / len(observations)) * penalty_var
+    return sqrt(result / len(observations))
 
 
 def error_rmse_peak(forecast, observations):
