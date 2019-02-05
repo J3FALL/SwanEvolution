@@ -314,7 +314,7 @@ def robustness_run(packed_args):
                                                     mutation_rate=param_for_run['mutation_rate'],
                                                     mutation_value_rate=mutation_value_rate,
                                                     stations=stations_for_run,
-                                                    save_figures=True,
+                                                    save_figures=False,
                                                     figure_path=figure_path)
 
     return best, metrics, ref_metrics
