@@ -12,7 +12,10 @@ from tqdm import tqdm
 from src.evolution.spea2 import SPEA2
 from src.noice_experiments.errors import (
     error_dtw_all,
-    error_rmse_all
+    error_rmse_all,
+    error_mae_all,
+    error_mae_peak,
+    error_rmse_peak
 )
 from src.noice_experiments.evo_operators import (
     calculate_objectives_interp,
@@ -164,7 +167,7 @@ def run_robustness_exp(max_gens, pop_size, archive_size, crossover_rate, mutatio
     ww3_obs = \
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
 
-    train_model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
+    train_model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_mae_all,
                             forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
     test_model = model_all_stations()
     default_forecasts = default_params_forecasts(test_model)
@@ -220,8 +223,8 @@ objective_tradeoff = {'a': 0, 'archive_size_rate': 0.35157832568915776, 'crossov
                       'max_gens': 9, 'mutation_p1': 0.21674397143802346, 'mutation_p2': 0.017216450597376923,
                       'mutation_p3': 0.0008306686136608031, 'mutation_rate': 0.2696660952766096, 'pop_size': 17}
 
-objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
-                    'max_gens': 30, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
+objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.3,
+                    'max_gens': 50, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
                     'mutation_p3': 0.001, 'mutation_rate': 0.5, 'pop_size': 20}
 
 stations_for_run_set = [[1],
@@ -254,10 +257,12 @@ def robustness_statistics():
 
     with open(f'../exp-res-{exptime}.csv', 'w', newline='') as csvfile:
         fieldnames = ['ID', 'IterId', 'SetId', 'drf', 'cfw', 'stpm',
-                      'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
+                      'rmse_all', 'dtw_all', 'mae_all', 'rmse_peak', 'mae_peak']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
         writer.writeheader()
+
+    models_to_tests = init_models_to_tests()
 
     cpu_count = 8
 
@@ -278,8 +283,6 @@ def robustness_statistics():
         for idx, out in enumerate(results):
             best, metrics, ref_metrics = out
 
-            stations_metrics[0:9] = metrics / ref_metrics
-
             with open(f'../exp-res-{exptime}.csv', 'a', newline='') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -287,9 +290,15 @@ def robustness_statistics():
                                 'drf': best.genotype.drf,
                                 'cfw': best.genotype.cfw,
                                 'stpm': best.genotype.stpm}
-                for station_idx in range(len(metrics)):
-                    key = f'st{station_idx + 1}'
-                    row_to_write.update({key: stations_metrics[station_idx]})
+                metrics = all_error_metrics(best.genotype, models_to_tests)
+                for metric_name in metrics.keys():
+                    stations_metrics = metrics[metric_name]
+                    stations_to_write = {}
+                    for station_idx in range(len(stations_metrics)):
+                        key = f'st{station_idx + 1}'
+                        stations_to_write.update({key: stations_metrics[station_idx]})
+                    row_to_write.update({metric_name: stations_to_write})
+
                 writer.writerow(row_to_write)
 
 
@@ -311,8 +320,49 @@ def robustness_run(packed_args):
     return best, metrics, ref_metrics
 
 
+def init_models_to_tests():
+    metrics = {'rmse_all': error_rmse_all,
+               'dtw_all': error_dtw_all,
+               'mae_all': error_mae_all,
+               'rmse_peak': error_rmse_peak,
+               'mae_peak': error_mae_peak}
+    grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
+    ww3_obs = \
+        [obs.time_series() for obs in
+         wave_watch_results(path_to_results='../../samples/ww-res/', stations=ALL_STATIONS)]
+
+    models = {}
+    for metric_name in metrics.keys():
+        model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=ALL_STATIONS,
+                          error=metrics[metric_name],
+                          forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+        models[metric_name] = model
+
+    return models
+
+
+def all_error_metrics(params, models_to_tests):
+    metrics = {'rmse_all': error_rmse_all,
+               'dtw_all': error_dtw_all,
+               'mae_all': error_mae_all,
+               'rmse_peak': error_rmse_peak,
+               'mae_peak': error_mae_peak}
+
+    out = {}
+
+    for metric_name in metrics.keys():
+        model = models_to_tests[metric_name]
+
+        closest_hist = model.closest_params(params)
+        closest_params = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
+
+        out[metric_name] = model.output(params=closest_params)
+
+    return out
+
+
 def prepare_all_fake_models():
-    errors = [error_rmse_all, error_dtw_all]
+    errors = [error_rmse_peak, error_mae_all, error_mae_peak]
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
     for noise in [0, 1, 2, 15, 16, 17, 25, 26]:
@@ -322,11 +372,11 @@ def prepare_all_fake_models():
                 ww3_obs = \
                     [obs.time_series() for obs in
                      wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
-                train_model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations,
-                                        error=err,
-                                        forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=noise)
+                model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations,
+                                  error=err,
+                                  forecasts_path=f'../../../wind-noice-runs/results_fixed/{noise}',
+                                  noise_run=noise)
 
 
 if __name__ == '__main__':
-    # robustness_statistics()
-    prepare_all_fake_models()
+    robustness_statistics()

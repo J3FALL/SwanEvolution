@@ -24,6 +24,8 @@ drf_range = [0.2, 0.4, 0.6000000000000001, 0.8, 1.0, 1.2, 1.4, 1.599999999999999
 cfw_range = [0.005, 0.01, 0.015, 0.02, 0.025, 0.030000000000000002, 0.035, 0.04, 0.045, 0.049999999999999996]
 stpm_range = [0.001, 0.0025, 0.004, 0.0055, 0.006999999999999999, 0.008499999999999999, 0.009999999999999998]
 
+GRID_PATH = '../../grid'
+
 
 class SWANParams:
 
@@ -99,7 +101,9 @@ class FakeModel:
         # calc fitness for every point
 
         st_set_id = ("-".join(str(self.stations)))
-        grid_file_path = f'../grid-saved-{self.error.__name__}_{self.noise_run}_st{st_set_id}.pik'
+        file_path = f'grid-saved-{self.error.__name__}_{self.noise_run}_st{st_set_id}.pik'
+        
+        grid_file_path = os.path.join(GRID_PATH, file_path)
 
         if not os.path.isfile(grid_file_path):
             grid_idxs = self.__grid_idxs()
