@@ -362,10 +362,11 @@ def all_error_metrics(params, models_to_tests):
 
 
 def prepare_all_fake_models():
-    errors = [error_rmse_peak, error_mae_all, error_mae_peak]
+    errors = [error_dtw_all, error_rmse_all, error_mae_all, error_mae_peak, error_rmse_peak]
+    # errors = [error_mae_all]
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-    for noise in [0, 1, 2, 15, 16, 17, 25, 26]:
+    for noise in [1, 2, 15, 16, 17, 25, 26]:
         for err in errors:
             for stations in stations_for_run_set:
                 print(f'configure model for: noise = {noise}; error = {err}; stations = {stations}')
@@ -379,4 +380,5 @@ def prepare_all_fake_models():
 
 
 if __name__ == '__main__':
-    robustness_statistics()
+    prepare_all_fake_models()
+    # robustness_statistics()

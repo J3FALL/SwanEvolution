@@ -102,7 +102,7 @@ class FakeModel:
 
         st_set_id = ("-".join(str(self.stations)))
         file_path = f'grid-saved-{self.error.__name__}_{self.noise_run}_st{st_set_id}.pik'
-        
+
         grid_file_path = os.path.join(GRID_PATH, file_path)
 
         if not os.path.isfile(grid_file_path):
@@ -111,7 +111,6 @@ class FakeModel:
             forecasts = []
             for i, j, k in grid_idxs:
                 forecasts.append([forecast for forecast in self.grid[i, j, k]])
-
             all_series = []
             for fk, obs in zip(forecasts, repeat(self.observations)):
                 all_series.append([fk, obs])
@@ -119,12 +118,10 @@ class FakeModel:
             with Pool(processes=cpu_count) as p:
                 for _, out in enumerate(p.imap_unordered(self._errors_at_point, all_series)):
                     results.append(out)
-
             for point, forecast in zip(grid_idxs, results):
                 i, j, k = point
                 for station_idx, series in enumerate(forecast):
                     self.err_grid[i, j, k, station_idx] = series
-
             pickle_out = open(grid_file_path, 'wb')
             pickle.dump(self.err_grid, pickle_out)
             pickle_out.close()
