@@ -167,7 +167,7 @@ def run_robustness_exp(max_gens, pop_size, archive_size, crossover_rate, mutatio
     ww3_obs = \
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
 
-    train_model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_mae_all,
+    train_model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
                             forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
     test_model = model_all_stations()
     default_forecasts = default_params_forecasts(test_model)
@@ -250,8 +250,6 @@ stations_for_run_set = [[1],
 def robustness_statistics():
     param_for_run = objective_manual
 
-    stations_metrics = np.zeros(9)
-
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
     os.mkdir(f'../../{exptime}')
 
@@ -264,9 +262,10 @@ def robustness_statistics():
 
     models_to_tests = init_models_to_tests()
 
-    cpu_count = 8
+    cpu_count = 20
+    iterations = 100
 
-    for iteration in range(10):
+    for iteration in range(iterations):
         results = []
         with Pool(processes=cpu_count) as p:
             runs_total = len(stations_for_run_set)
@@ -362,11 +361,12 @@ def all_error_metrics(params, models_to_tests):
 
 
 def prepare_all_fake_models():
-    errors = [error_dtw_all, error_rmse_all, error_mae_all, error_mae_peak, error_rmse_peak]
-    # errors = [error_mae_all]
+    st_for_run = []
+    # errors = [error_rmse_peak, error_dtw_all, error_rmse_all, error_mae_all, error_mae_peak]
+    errors = [error_rmse_peak]
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
-
-    for noise in [1, 2, 15, 16, 17, 25, 26]:
+    noises = [0, 1, 2, 15, 16, 17, 25, 26]
+    for noise in noises:
         for err in errors:
             for stations in stations_for_run_set:
                 print(f'configure model for: noise = {noise}; error = {err}; stations = {stations}')
@@ -380,5 +380,5 @@ def prepare_all_fake_models():
 
 
 if __name__ == '__main__':
-    prepare_all_fake_models()
-    # robustness_statistics()
+    # prepare_all_fake_models()
+    robustness_statistics()
