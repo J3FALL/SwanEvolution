@@ -11,7 +11,11 @@ from tqdm import tqdm
 from src.ensemble.ensemble import Ensemble
 from src.evolution.spea2 import SPEA2
 from src.noice_experiments.errors import (
-    error_rmse_all
+    error_dtw_all,
+    error_rmse_all,
+    error_mae_all,
+    error_mae_peak,
+    error_rmse_peak
 )
 from src.noice_experiments.evo_operators import (
     calculate_objectives_interp,
@@ -40,7 +44,7 @@ def model_all_stations():
         [obs.time_series() for obs in
          wave_watch_results(path_to_results='../../samples/ww-res/', stations=ALL_STATIONS)]
 
-    model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=ALL_STATIONS, error=error_rmse_all,
+    model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=ALL_STATIONS, error=error_rmse_peak,
                       forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
 
     return model
@@ -80,18 +84,18 @@ def get_rmse_for_all_stations(forecasts, observations):
 def optimize():
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-    train_stations = [4, 5, 6]
+    train_stations = [1, 2, 3]
     ww3_obs = \
         [obs.time_series() for obs in
          wave_watch_results(path_to_results='../../samples/ww-res/', stations=train_stations)]
 
-    ens = Ensemble(grid=grid, noise_cases=[0, 1, 2, 15, 16, 17, 25, 26], observations=ww3_obs,
+    ens = Ensemble(grid=grid, noise_cases=[0, 1, 2, 15, 16, 25, 26], observations=ww3_obs,
                    path_to_forecasts='../../../wind-noice-runs/results_fixed',
                    stations_to_out=train_stations, error=error_rmse_all)
 
     history, archive_history = SPEA2(
         params=SPEA2.Params(max_gens=150, pop_size=20, archive_size=5,
-                            crossover_rate=0.8, mutation_rate=0.7, mutation_value_rate=[0.1, 0.001, 0.0005]),
+                            crossover_rate=0.8, mutation_rate=0.7, mutation_value_rate=[0.1, 0.01, 0.001]),
         init_population=initial_pop_lhs,
         objectives=partial(calculate_objectives_interp, ens),
         crossover=crossover,
@@ -132,9 +136,10 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
                                             wave_watch_results(path_to_results='../../samples/ww-res/',
                                                                stations=ALL_STATIONS))
 
+    old_path = '../../../wind-noice-runs/results_fixed'
     train_model = Ensemble(grid=grid, noise_cases=[0, 1, 2, 15, 16, 17, 25, 26], observations=ww3_obs,
-                           path_to_forecasts='../../../wind-noice-runs/results_fixed',
-                           stations_to_out=stations, error=error_rmse_all)
+                           path_to_forecasts=old_path,
+                           stations_to_out=stations, error=error_rmse_peak)
 
     history, _ = SPEA2(
         params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size,
@@ -183,58 +188,55 @@ objective_tradeoff = {'a': 0, 'archive_size_rate': 0.35157832568915776, 'crossov
                       'max_gens': 9, 'mutation_p1': 0.21674397143802346, 'mutation_p2': 0.017216450597376923,
                       'mutation_p3': 0.0008306686136608031, 'mutation_rate': 0.2696660952766096, 'pop_size': 17}
 
-objective_manual = {'a': 0, 'archive_size_rate': 0.3, 'crossover_rate': 0.3,
-                    'max_gens': 30, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
+objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.3,
+                    'max_gens': 50, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
                     'mutation_p3': 0.001, 'mutation_rate': 0.5, 'pop_size': 20}
 
-params_for_luck = {'a': 0, 'max_gens': 100, 'pop_size': 20,
-                   'archive_size_rate': 0.25, 'crossover_rate': 0.8, 'mutation_rate': 0.7,
-                   'mutation_p1': 0.1, 'mutation_p2': 0.001, 'mutation_p3': 0.0005
-                   }
+stations_for_run_set = [[1],
+                        [1, 2],
+                        [1, 2, 3],
+                        [1, 2, 3, 4],
+                        [1, 2, 3, 4, 5],
+                        [1, 2, 3, 4, 5, 6],
+                        [4],
+                        [4, 5],
+                        [4, 5, 6],
+                        [4, 5, 6, 7],
+                        [4, 5, 6, 7, 8],
+                        [4, 5, 6, 7, 8, 9],
+                        [1],
+                        [1, 2],
+                        [1, 2, 3],
+                        [1, 2, 3, 7],
+                        [1, 2, 3, 7, 8],
+                        [1, 2, 3, 7, 8, 9]]
 
 
 def robustness_statistics():
-    param_for_run = params_for_luck
-
-    stations_for_run_set2 = [[1],
-                             [1, 2],
-                             [1, 2, 3],
-                             [1, 2, 3, 4],
-                             [1, 2, 3, 4, 5],
-                             [1, 2, 3, 4, 5, 6],
-                             [4],
-                             [4, 5],
-                             [4, 5, 6],
-                             [4, 5, 6, 7],
-                             [4, 5, 6, 7, 8],
-                             [4, 5, 6, 7, 8, 9],
-                             [1],
-                             [1, 2],
-                             [1, 2, 3],
-                             [1, 2, 3, 7],
-                             [1, 2, 3, 7, 8],
-                             [1, 2, 3, 7, 8, 9]]
-    stations_metrics = np.zeros(9)
+    param_for_run = objective_manual
 
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
     os.mkdir(f'../../{exptime}')
 
     with open(f'../exp-res-ens-{exptime}.csv', 'w', newline='') as csvfile:
         fieldnames = ['ID', 'IterId', 'SetId', 'drf', 'cfw', 'stpm',
-                      'st1', 'st2', 'st3', 'st4', 'st5', 'st6', 'st7', 'st8', 'st9']
+                      'rmse_all', 'dtw_all', 'mae_all', 'rmse_peak', 'mae_peak']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
         writer.writeheader()
 
-    cpu_count = 8
+    models_to_tests = init_models_to_tests()
 
-    for iteration in range(10):
+    cpu_count = 20
+
+    iterations = 100
+    for iteration in range(iterations):
         results = []
         with Pool(processes=cpu_count) as p:
-            runs_total = len(stations_for_run_set2)
+            runs_total = len(stations_for_run_set)
             fig_paths = [os.path.join('../..', exptime, str(iteration * runs_total + run)) for run in range(runs_total)]
             all_packed_params = []
-            for station, params, fig_path in zip(stations_for_run_set2, repeat(param_for_run), fig_paths):
+            for station, params, fig_path in zip(stations_for_run_set, repeat(param_for_run), fig_paths):
                 all_packed_params.append([station, params, fig_path])
 
             with tqdm(total=runs_total) as progress_bar:
@@ -245,8 +247,6 @@ def robustness_statistics():
         for idx, out in enumerate(results):
             best, metrics, ref_metrics = out
 
-            stations_metrics[0:9] = metrics / ref_metrics
-
             with open(f'../exp-res-ens-{exptime}.csv', 'a', newline='') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -254,9 +254,15 @@ def robustness_statistics():
                                 'drf': best.genotype.drf,
                                 'cfw': best.genotype.cfw,
                                 'stpm': best.genotype.stpm}
-                for station_idx in range(len(metrics)):
-                    key = f'st{station_idx + 1}'
-                    row_to_write.update({key: stations_metrics[station_idx]})
+                metrics = all_error_metrics(best.genotype, models_to_tests)
+                for metric_name in metrics.keys():
+                    stations_metrics = metrics[metric_name]
+                    stations_to_write = {}
+                    for station_idx in range(len(stations_metrics)):
+                        key = f'st{station_idx + 1}'
+                        stations_to_write.update({key: stations_metrics[station_idx]})
+                    row_to_write.update({metric_name: stations_to_write})
+
                 writer.writerow(row_to_write)
 
 
@@ -272,15 +278,53 @@ def robustness_run(packed_args):
                                                        mutation_rate=param_for_run['mutation_rate'],
                                                        mutation_value_rate=mutation_value_rate,
                                                        stations=stations_for_run,
-                                                       save_figures=True,
+                                                       save_figures=False,
                                                        figure_path=figure_path)
 
     return best, metrics, ref_metrics
 
 
-#
-# optimize()
+def init_models_to_tests():
+    metrics = {'rmse_all': error_rmse_all,
+               'dtw_all': error_dtw_all,
+               'mae_all': error_mae_all,
+               'rmse_peak': error_rmse_peak,
+               'mae_peak': error_mae_peak}
+    grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
+    ww3_obs = \
+        [obs.time_series() for obs in
+         wave_watch_results(path_to_results='../../samples/ww-res/', stations=ALL_STATIONS)]
+
+    models = {}
+    for metric_name in metrics.keys():
+        model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=ALL_STATIONS,
+                          error=metrics[metric_name],
+                          forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+        models[metric_name] = model
+
+    return models
+
+
+def all_error_metrics(params, models_to_tests):
+    metrics = {'rmse_all': error_rmse_all,
+               'dtw_all': error_dtw_all,
+               'mae_all': error_mae_all,
+               'rmse_peak': error_rmse_peak,
+               'mae_peak': error_mae_peak}
+
+    out = {}
+
+    for metric_name in metrics.keys():
+        model = models_to_tests[metric_name]
+
+        closest_hist = model.closest_params(params)
+        closest_params = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
+
+        out[metric_name] = model.output(params=closest_params)
+
+    return out
 
 
 if __name__ == '__main__':
     robustness_statistics()
+    # optimize()
