@@ -59,7 +59,7 @@ class ForecastFile:
             return lines
 
     def _skip_meta_info(self, lines):
-        return list(filter(lambda line: line if not line.startswith("%") else None, lines))
+        return list(filter(lambda line: line if not line.startswith("V") else None, lines))
 
 
 class FormattedDate:

@@ -12,8 +12,8 @@ def error_dtw_all(forecast, observations):
     :param observations: ObservationFile object
     '''
 
-    distance, path = fastdtw(forecast.hsig_series, observations, dist=euclidean)
-
+    #distance, path = fastdtw(forecast.hsig_series, observations, dist=euclidean)
+    distance=1
     # print("DTW")
     return distance
 
@@ -25,12 +25,14 @@ def error_rmse_all(forecast, observations):
     :param observations: ObservationFile object
     '''
 
+    penalty_var=abs((np.var(observations)-np.var(forecast.hsig_series))/np.var(observations))+1
+
     result = 0.0
 
     for pred, obs in zip(forecast.hsig_series, observations):
         result += pow(pred - obs, 2)
 
-    return sqrt(result / len(observations))
+    return sqrt(result / len(observations))*penalty_var
 
 
 def error_rmse_peak(forecast, observations):

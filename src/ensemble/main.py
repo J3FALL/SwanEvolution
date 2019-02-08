@@ -34,7 +34,10 @@ from src.utils.vis import (
     plot_population_movement
 )
 
+import random
+
 ALL_STATIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+random.seed(42)
 np.random.seed(42)
 
 
@@ -45,7 +48,7 @@ def model_all_stations():
          wave_watch_results(path_to_results='../../samples/ww-res/', stations=ALL_STATIONS)]
 
     model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=ALL_STATIONS, error=error_rmse_all,
-                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+                      forecasts_path='../../../wind-postproc/out', noise_run=0)
 
     return model
 
@@ -84,18 +87,18 @@ def get_rmse_for_all_stations(forecasts, observations):
 def optimize():
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-    train_stations = [1, 2, 3]
+    train_stations = [1, 2, 3,4,5,6,7,8,9]
     ww3_obs = \
         [obs.time_series() for obs in
          wave_watch_results(path_to_results='../../samples/ww-res/', stations=train_stations)]
 
     noises = [0, 1, 2, 15, 16, 25, 26]
-    ens = Ensemble(grid=grid, noise_cases=[0], observations=ww3_obs,
-                   path_to_forecasts='../../../wind-noice-runs/results_fixed',
+    ens = Ensemble(grid=grid, noise_cases=[0,1,2, 3, 4, 5, 6, 7, 15, 16, 17, 18, 25, 26], observations=ww3_obs,
+                   path_to_forecasts='../../../wind-postproc/out',
                    stations_to_out=train_stations, error=error_rmse_all)
 
     history, archive_history = SPEA2(
-        params=SPEA2.Params(max_gens=50, pop_size=20, archive_size=5,
+        params=SPEA2.Params(max_gens=15, pop_size=20, archive_size=5,
                             crossover_rate=0.7, mutation_rate=0.7, mutation_value_rate=[0.1, 0.001, 0.0001]),
         init_population=initial_pop_lhs,
         objectives=partial(calculate_objectives_interp, ens),

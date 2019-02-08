@@ -62,6 +62,9 @@ def mutation(individ, rate, mutation_value_rate):
         param_to_mutate = params[random.randint(0, 2)]
         mutation_ratio = abs(np.random.normal(1, 5, 1)[0])
 
+
+
+
         sign = 1 if random.random() < 0.5 else -1
         if param_to_mutate is 'drf':
             individ.drf += sign * mutation_value_rate[0] * mutation_ratio

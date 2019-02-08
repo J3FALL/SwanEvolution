@@ -39,6 +39,8 @@ from src.utils.vis import (
 )
 
 random.seed(42)
+np.random.seed(42)
+
 
 np.random.seed(42)
 
@@ -96,7 +98,7 @@ def model_all_stations():
          wave_watch_results(path_to_results='../../samples/ww-res/', stations=ALL_STATIONS)]
 
     model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=ALL_STATIONS, error=error_rmse_all,
-                      forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+                      forecasts_path='../../../wind-postproc/out', noise_run=0)
 
     return model
 
@@ -119,14 +121,14 @@ def default_params_forecasts(model):
 def optimize_by_ww3_obs(max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate):
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-    train_stations = [1, 2, 3]
+    train_stations = [1, 2, 3,4,5,6,7,8,9]
 
     ww3_obs = \
         [obs.time_series() for obs in
          wave_watch_results(path_to_results='../../samples/ww-res/', stations=train_stations)]
 
     train_model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=train_stations, error=error_rmse_all,
-                            forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+                            forecasts_path='../../../wind-postproc/out', noise_run=0)
 
     history, archive_history = SPEA2(
         params=SPEA2.Params(max_gens, pop_size=pop_size, archive_size=archive_size,
@@ -198,7 +200,7 @@ def run_robustness_exp(max_gens, pop_size, archive_size, crossover_rate, mutatio
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
 
     train_model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
-                            forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+                            forecasts_path='../../../wind-postproc/out', noise_run=0)
     test_model = model_all_stations()
     default_forecasts = default_params_forecasts(test_model)
 
@@ -356,7 +358,7 @@ def init_models_to_tests():
     for metric_name in metrics.keys():
         model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=ALL_STATIONS,
                           error=metrics[metric_name],
-                          forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+                          forecasts_path='../../../wind-postproc/out', noise_run=0)
         models[metric_name] = model
 
     return models
@@ -394,12 +396,12 @@ def prepare_all_fake_models():
                      wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
                 model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations,
                                   error=err,
-                                  forecasts_path=f'../../../wind-noice-runs/results_fixed/{noise}',
+                                  forecasts_path=f'../../../wind-postproc/out',
                                   noise_run=noise)
 
 
 if __name__ == '__main__':
     # robustness_statistics()
     # prepare_all_fake_models()
-    optimize_by_ww3_obs(max_gens=50, pop_size=20, archive_size=5, crossover_rate=0.7, mutation_rate=0.7,
+    optimize_by_ww3_obs(max_gens=15, pop_size=20, archive_size=5, crossover_rate=0.7, mutation_rate=0.7,
                         mutation_value_rate=[0.1, 0.001, 0.0001])
