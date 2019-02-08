@@ -202,7 +202,7 @@ class FakeModel:
 
         def _station_series(self):
             hsig_idx = 1
-            return [float(line.split()[hsig_idx]) for line in self.file.time_series()]
+            return [float(line.split(',')[hsig_idx]) for line in self.file.time_series()]
 
 
 class CSVGridFile:

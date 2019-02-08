@@ -30,14 +30,14 @@ class Ensemble:
         for noise in noise_cases:
             models.append(FakeModel(grid_file=self.grid, observations=self.observations,
                                     stations_to_out=self.stations_to_out, error=self.error,
-                                    forecasts_path=os.path.join(self.forecasts_dir, str(noise)), noise_run=noise))
+                                    forecasts_path=os.path.join(self.forecasts_dir), noise_run=noise))
 
         return models
 
     def output(self, params):
         predictions = [model.output(params=params) for model in self.models]
 
-        best_amount = 1
+        best_amount = 5
         predictions_best = sorted(predictions, key=lambda p: np.mean(p))[:best_amount]
 
         statistics_by_stations = {}
