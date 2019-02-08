@@ -35,6 +35,7 @@ from src.utils.vis import (
 )
 
 ALL_STATIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+np.random.seed(42)
 
 
 def model_all_stations():
@@ -88,13 +89,14 @@ def optimize():
         [obs.time_series() for obs in
          wave_watch_results(path_to_results='../../samples/ww-res/', stations=train_stations)]
 
-    ens = Ensemble(grid=grid, noise_cases=[0, 1, 2, 15, 16, 25, 26], observations=ww3_obs,
+    noises = [0, 1, 2, 15, 16, 25, 26]
+    ens = Ensemble(grid=grid, noise_cases=[0], observations=ww3_obs,
                    path_to_forecasts='../../../wind-noice-runs/results_fixed',
                    stations_to_out=train_stations, error=error_rmse_all)
 
     history, archive_history = SPEA2(
-        params=SPEA2.Params(max_gens=150, pop_size=20, archive_size=5,
-                            crossover_rate=0.7, mutation_rate=0.7, mutation_value_rate=[0.1, 0.01, 0.001]),
+        params=SPEA2.Params(max_gens=50, pop_size=20, archive_size=5,
+                            crossover_rate=0.7, mutation_rate=0.7, mutation_value_rate=[0.1, 0.001, 0.0001]),
         init_population=initial_pop_lhs,
         objectives=partial(calculate_objectives_interp, ens),
         crossover=crossover,
@@ -102,6 +104,7 @@ def optimize():
 
     params = history.last().genotype
 
+    save_archive_history(archive_history)
     test_model = model_all_stations()
 
     closest_hist = test_model.closest_params(params)
@@ -122,6 +125,34 @@ def optimize():
     return history
 
 
+def save_archive_history(history, file_name='ens-history.csv'):
+    objectives_amount = len(history[0][0].objectives)
+
+    with open(file_name, 'w', newline='') as csvfile:
+        fieldnames = ['idx', 'gen_idx'] + [f'err_{idx + 1}' for idx in range(objectives_amount)] \
+                     + ['drf', 'stpm', 'cfw']
+
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for gen_idx, gen in enumerate(history):
+            for ind_idx, ind in enumerate(gen):
+                row_to_write = {}
+                idx = gen_idx * len(gen) + ind_idx
+
+                row_to_write['idx'] = idx
+                row_to_write['gen_idx'] = gen_idx
+
+                for err_idx in range(objectives_amount):
+                    row_to_write[f'err_{err_idx + 1}'] = ind.objectives[err_idx]
+
+                row_to_write['drf'] = ind.genotype.drf
+                row_to_write['stpm'] = ind.genotype.stpm
+                row_to_write['cfw'] = ind.genotype.cfw
+
+                writer.writerow(row_to_write)
+
+
 def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate,
                           stations, **kwargs):
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
@@ -136,7 +167,7 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
                                                                stations=ALL_STATIONS))
 
     old_path = '../../../wind-noice-runs/results_fixed'
-    train_model = Ensemble(grid=grid, noise_cases=[0, 1, 2, 15, 16, 17, 25, 26], observations=ww3_obs,
+    train_model = Ensemble(grid=grid, noise_cases=[0], observations=ww3_obs,
                            path_to_forecasts=old_path,
                            stations_to_out=stations, error=error_rmse_all)
 
@@ -205,7 +236,7 @@ def robustness_statistics():
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
     os.mkdir(f'../../{exptime}')
 
-    iterations = 30
+    iterations = 5
     run_by = 'rmse_all'
 
     file_name = f'../ens-{run_by}-{iterations}-runs.csv'
@@ -315,5 +346,5 @@ def all_error_metrics(params, models_to_tests):
 
 
 if __name__ == '__main__':
-    robustness_statistics()
-    # optimize()
+    # robustness_statistics()
+    optimize()

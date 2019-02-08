@@ -87,8 +87,6 @@ class SPEA2:
         while gen < self.params.max_gens:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
-            # print('fitness: ', np.mean([p.fitness() for p in self._pop]))
-            # print('obj: ', np.mean([mean_obj(p) for p in self._pop]))
             best = sorted(self._archive, key=lambda p: mean_obj(p))[0]
             # print("best: ", mean_obj(best))
             last_fit = history.last().fitness_value
@@ -104,7 +102,7 @@ class SPEA2:
             selected = self.selected(self.params.pop_size, self._archive)
             self._pop = self.reproduce(selected, self.params.pop_size)
 
-            to_add = copy.deepcopy(self._archive)
+            to_add = copy.deepcopy(self._archive + self._pop)
             self.objectives(to_add)
             archive_history.append(to_add)
 

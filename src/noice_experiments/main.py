@@ -40,6 +40,8 @@ from src.utils.vis import (
 
 random.seed(42)
 
+np.random.seed(42)
+
 ALL_STATIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 
@@ -136,7 +138,7 @@ def optimize_by_ww3_obs(max_gens, pop_size, archive_size, crossover_rate, mutati
         mutation=mutation).solution(verbose=True)
 
     params = history.last().genotype
-
+    save_archive_history(archive_history)
     test_model = model_all_stations()
 
     closest_hist = test_model.closest_params(params)
@@ -159,6 +161,34 @@ def optimize_by_ww3_obs(max_gens, pop_size, archive_size, crossover_rate, mutati
     plot_population_movement(archive_history, grid)
 
     return history
+
+
+def save_archive_history(history, file_name='history.csv'):
+    objectives_amount = len(history[0][0].objectives)
+
+    with open(file_name, 'w', newline='') as csvfile:
+        fieldnames = ['idx', 'gen_idx'] + [f'err_{idx + 1}' for idx in range(objectives_amount)] \
+                     + ['drf', 'stpm', 'cfw']
+
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for gen_idx, gen in enumerate(history):
+            for ind_idx, ind in enumerate(gen):
+                row_to_write = {}
+                idx = gen_idx * len(gen) + ind_idx
+
+                row_to_write['idx'] = idx
+                row_to_write['gen_idx'] = gen_idx
+
+                for err_idx in range(objectives_amount):
+                    row_to_write[f'err_{err_idx + 1}'] = ind.objectives[err_idx]
+
+                row_to_write['drf'] = ind.genotype.drf
+                row_to_write['stpm'] = ind.genotype.stpm
+                row_to_write['cfw'] = ind.genotype.cfw
+
+                writer.writerow(row_to_write)
 
 
 def run_robustness_exp(max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate, stations,
@@ -369,5 +399,7 @@ def prepare_all_fake_models():
 
 
 if __name__ == '__main__':
-    robustness_statistics()
+    # robustness_statistics()
     # prepare_all_fake_models()
+    optimize_by_ww3_obs(max_gens=50, pop_size=20, archive_size=5, crossover_rate=0.7, mutation_rate=0.7,
+                        mutation_value_rate=[0.1, 0.001, 0.0001])
