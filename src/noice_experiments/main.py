@@ -244,7 +244,7 @@ def robustness_statistics():
     iterations = 30
     run_by = 'rmse_all'
 
-    file_name = f'../ens-{run_by}-{iterations}-runs.csv'
+    file_name = f'../bl-{run_by}-{iterations}-runs.csv'
     with open(file_name, 'w', newline='') as csvfile:
         fieldnames = ['ID', 'IterId', 'SetId', 'drf', 'cfw', 'stpm',
                       'rmse_all', 'rmse_peak', 'mae_all', 'mae_peak']
