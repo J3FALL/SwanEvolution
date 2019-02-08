@@ -3,8 +3,6 @@ import os
 import pickle
 import random
 from collections import Counter
-from itertools import repeat
-from multiprocessing import Pool
 
 import numpy as np
 from scipy.interpolate import interpn
@@ -107,21 +105,13 @@ class FakeModel:
 
         if not os.path.isfile(grid_file_path):
             grid_idxs = self.__grid_idxs()
-            results = []
-            forecasts = []
+
             for i, j, k in grid_idxs:
-                forecasts.append([forecast for forecast in self.grid[i, j, k]])
-            all_series = []
-            for fk, obs in zip(forecasts, repeat(self.observations)):
-                all_series.append([fk, obs])
-            cpu_count = 8
-            with Pool(processes=cpu_count) as p:
-                for _, out in enumerate(p.imap_unordered(self._errors_at_point, all_series)):
-                    results.append(out)
-            for point, forecast in zip(grid_idxs, results):
-                i, j, k = point
-                for station_idx, series in enumerate(forecast):
-                    self.err_grid[i, j, k, station_idx] = series
+                forecasts = [forecast for forecast in self.grid[i, j, k]]
+                for forecast, observation in zip(forecasts, self.observations):
+                    station_idx = forecasts.index(forecast)
+                    self.err_grid[i, j, k, station_idx] = self.error(forecast, observation)
+
             pickle_out = open(grid_file_path, 'wb')
             pickle.dump(self.err_grid, pickle_out)
             pickle_out.close()

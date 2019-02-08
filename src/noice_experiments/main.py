@@ -211,21 +211,9 @@ def run_robustness_exp(max_gens, pop_size, archive_size, crossover_rate, mutatio
     return [history.last(), metrics, ref_metrics]
 
 
-objective_robustparams = {'a': 0, 'archive_size_rate': 0.3516265476722533, 'crossover_rate': 0.7194075160834003,
-                          'max_gens': 3, 'mutation_p1': 0.18530572116666033, 'mutation_p2': 0.008275074614718868,
-                          'mutation_p3': 0.000917588547202427, 'mutation_rate': 0.15718021655197123, 'pop_size': 19}
-
-objective_q = {'a': 0, 'archive_size_rate': 0.18192329983957756, 'crossover_rate': 0.8275151161211388, 'max_gens': 4,
-               'mutation_p1': 0.22471644990516082, 'mutation_p2': 0.004027729364749993,
-               'mutation_p3': 0.000297583624177003, 'mutation_rate': 0.22663581900044313, 'pop_size': 9}
-
-objective_tradeoff = {'a': 0, 'archive_size_rate': 0.35157832568915776, 'crossover_rate': 0.37407732045418357,
-                      'max_gens': 9, 'mutation_p1': 0.21674397143802346, 'mutation_p2': 0.017216450597376923,
-                      'mutation_p3': 0.0008306686136608031, 'mutation_rate': 0.2696660952766096, 'pop_size': 17}
-
-objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.3,
+objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
                     'max_gens': 50, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
-                    'mutation_p3': 0.001, 'mutation_rate': 0.5, 'pop_size': 20}
+                    'mutation_p3': 0.001, 'mutation_rate': 0.7, 'pop_size': 20}
 
 stations_for_run_set = [[1],
                         [1, 2],
@@ -253,19 +241,23 @@ def robustness_statistics():
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
     os.mkdir(f'../../{exptime}')
 
-    with open(f'../exp-res-{exptime}.csv', 'w', newline='') as csvfile:
+    iterations = 30
+    run_by = 'rmse_all'
+
+    file_name = f'../ens-{run_by}-{iterations}-runs.csv'
+    with open(file_name, 'w', newline='') as csvfile:
         fieldnames = ['ID', 'IterId', 'SetId', 'drf', 'cfw', 'stpm',
-                      'rmse_all', 'dtw_all', 'mae_all', 'rmse_peak', 'mae_peak']
+                      'rmse_all', 'rmse_peak', 'mae_all', 'mae_peak']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
         writer.writeheader()
 
     models_to_tests = init_models_to_tests()
 
-    cpu_count = 20
-    iterations = 100
+    cpu_count = 8
 
     for iteration in range(iterations):
+        print(f'### ITERATION : {iteration}')
         results = []
         with Pool(processes=cpu_count) as p:
             runs_total = len(stations_for_run_set)
@@ -282,7 +274,7 @@ def robustness_statistics():
         for idx, out in enumerate(results):
             best, metrics, ref_metrics = out
 
-            with open(f'../exp-res-{exptime}.csv', 'a', newline='') as csvfile:
+            with open(file_name, 'a', newline='') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
                 row_to_write = {'ID': iteration * runs_total + idx, 'IterId': iteration, 'SetId': idx,
@@ -313,7 +305,7 @@ def robustness_run(packed_args):
                                                     mutation_rate=param_for_run['mutation_rate'],
                                                     mutation_value_rate=mutation_value_rate,
                                                     stations=stations_for_run,
-                                                    save_figures=False,
+                                                    save_figures=True,
                                                     figure_path=figure_path)
 
     return best, metrics, ref_metrics
@@ -321,10 +313,10 @@ def robustness_run(packed_args):
 
 def init_models_to_tests():
     metrics = {'rmse_all': error_rmse_all,
-               'dtw_all': error_dtw_all,
-               'mae_all': error_mae_all,
                'rmse_peak': error_rmse_peak,
+               'mae_all': error_mae_all,
                'mae_peak': error_mae_peak}
+
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
     ww3_obs = \
         [obs.time_series() for obs in
@@ -342,9 +334,8 @@ def init_models_to_tests():
 
 def all_error_metrics(params, models_to_tests):
     metrics = {'rmse_all': error_rmse_all,
-               'dtw_all': error_dtw_all,
-               'mae_all': error_mae_all,
                'rmse_peak': error_rmse_peak,
+               'mae_all': error_mae_all,
                'mae_peak': error_mae_peak}
 
     out = {}
@@ -361,9 +352,7 @@ def all_error_metrics(params, models_to_tests):
 
 
 def prepare_all_fake_models():
-    st_for_run = []
-    # errors = [error_rmse_peak, error_dtw_all, error_rmse_all, error_mae_all, error_mae_peak]
-    errors = [error_rmse_peak]
+    errors = [error_rmse_all]
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
     noises = [0, 1, 2, 15, 16, 17, 25, 26]
     for noise in noises:
@@ -380,5 +369,5 @@ def prepare_all_fake_models():
 
 
 if __name__ == '__main__':
-    # prepare_all_fake_models()
     robustness_statistics()
+    # prepare_all_fake_models()
