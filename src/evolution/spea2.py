@@ -6,7 +6,7 @@ from operator import itemgetter
 
 import numpy as np
 
-random.seed(datetime.now())
+#random.seed(datetime.now())
 
 from src.evolution.raw_fitness import raw_fitness
 
