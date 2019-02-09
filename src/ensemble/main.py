@@ -87,12 +87,11 @@ def get_rmse_for_all_stations(forecasts, observations):
 def optimize():
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
 
-    train_stations = [1, 2, 3,4,5,6,7,8,9]
+    train_stations = [1, 2, 3]
     ww3_obs = \
         [obs.time_series() for obs in
          wave_watch_results(path_to_results='../../samples/ww-res/', stations=train_stations)]
 
-    noises = [0, 1, 2, 15, 16, 25, 26]
     ens = Ensemble(grid=grid, noise_cases=[0,1,2, 3, 4, 5, 6, 7, 15, 16, 17, 18, 25, 26], observations=ww3_obs,
                    path_to_forecasts='../../../wind-postproc/out',
                    stations_to_out=train_stations, error=error_rmse_all)
@@ -169,12 +168,12 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
                                             wave_watch_results(path_to_results='../../samples/ww-res/',
                                                                stations=ALL_STATIONS))
 
-    old_path = '../../../wind-noice-runs/results_fixed'
-    train_model = Ensemble(grid=grid, noise_cases=[0], observations=ww3_obs,
+    old_path = '../../../wind-postproc/out'
+    train_model = Ensemble(grid=grid, noise_cases=[0,1,2, 3, 4, 5, 6, 7, 15, 16, 17, 18, 25, 26], observations=ww3_obs,
                            path_to_forecasts=old_path,
                            stations_to_out=stations, error=error_rmse_all)
 
-    history, _ = SPEA2(
+    history, archive_history = SPEA2(
         params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size,
                             crossover_rate=crossover_rate, mutation_rate=mutation_rate,
                             mutation_value_rate=mutation_value_rate),
@@ -182,6 +181,10 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
         objectives=partial(calculate_objectives_interp, train_model),
         crossover=crossover,
         mutation=mutation).solution(verbose=False)
+
+    exptime2 = str(datetime.datetime.now().time()).replace(":", "-")
+    save_archive_history(archive_history,f'rob-exp-ens-{exptime2}.csv')
+
 
     params = history.last().genotype
 
@@ -209,10 +212,15 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
     return [history.last(), metrics, ref_metrics]
 
 
+#objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
+#                    'max_gens': 15, 'mutation_p1': 0.1, 'mutation_p2': 0.001,
+#                    'mutation_p3': 0.0001, 'mutation_rate': 0.7, 'pop_size': 20}
+
 objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
-                    'max_gens': 50, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
+                    'max_gens': 10, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
                     'mutation_p3': 0.001, 'mutation_rate': 0.7, 'pop_size': 20}
 
+#stations_for_run_set = [[1,2,3]]
 stations_for_run_set = [[1],
                         [1, 2],
                         [1, 2, 3],
@@ -239,7 +247,7 @@ def robustness_statistics():
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
     os.mkdir(f'../../{exptime}')
 
-    iterations = 5
+    iterations = 10
     run_by = 'rmse_all'
 
     file_name = f'../ens-{run_by}-{iterations}-runs.csv'
@@ -323,7 +331,7 @@ def init_models_to_tests():
     for metric_name in metrics.keys():
         model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=ALL_STATIONS,
                           error=metrics[metric_name],
-                          forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
+                          forecasts_path='../../../wind-postproc/out', noise_run=0)
         models[metric_name] = model
 
     return models
@@ -340,14 +348,14 @@ def all_error_metrics(params, models_to_tests):
     for metric_name in metrics.keys():
         model = models_to_tests[metric_name]
 
-        closest_hist = model.closest_params(params)
-        closest_params = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
+       # closest_hist = model.closest_params(params)
+        #closest_params = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
 
-        out[metric_name] = model.output(params=closest_params)
+        out[metric_name] = model.output(params=params)
 
     return out
 
 
 if __name__ == '__main__':
-    # robustness_statistics()
-    optimize()
+    robustness_statistics()
+    #optimize()

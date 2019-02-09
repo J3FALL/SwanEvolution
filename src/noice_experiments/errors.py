@@ -63,12 +63,16 @@ def error_mae_peak(forecast, observations):
     '''
 
     peak_thr = np.mean(observations)
-    peaks = np.where(observations[:len(forecast.hsig_series)] > peak_thr)
 
-    pred = np.take(np.array(forecast.hsig_series), peaks)
-    obs = np.take(observations, peaks)
+    result = 0.0
+    points = 0
+    for pred, obs in zip(forecast.hsig_series, observations):
 
-    return np.sum(np.abs(pred - obs)) / len(pred)
+        if obs >= peak_thr:
+            result += abs(pred - obs)
+            points += 1
+
+    return (result / points)
 
 
 def error_mae_all(forecast, observations):
