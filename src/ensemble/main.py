@@ -97,8 +97,8 @@ def optimize():
                    stations_to_out=train_stations, error=error_rmse_all)
 
     history, archive_history = SPEA2(
-        params=SPEA2.Params(max_gens=15, pop_size=20, archive_size=5,
-                            crossover_rate=0.7, mutation_rate=0.7, mutation_value_rate=[0.1, 0.001, 0.0001]),
+        params=SPEA2.Params(max_gens=10, pop_size=10, archive_size=5,
+                            crossover_rate=0.5, mutation_rate=0.5, mutation_value_rate=[0.05, 0.001, 0.0005]),
         init_population=initial_pop_lhs,
         objectives=partial(calculate_objectives_interp, ens),
         crossover=crossover,
@@ -216,9 +216,10 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
 #                    'max_gens': 15, 'mutation_p1': 0.1, 'mutation_p2': 0.001,
 #                    'mutation_p3': 0.0001, 'mutation_rate': 0.7, 'pop_size': 20}
 
-objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
-                    'max_gens': 10, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
-                    'mutation_p3': 0.001, 'mutation_rate': 0.7, 'pop_size': 20}
+
+objective_manual = {'a': 0, 'archive_size_rate': 0.5, 'crossover_rate': 0.5,
+                    'max_gens': 20, 'mutation_p1': 0.05, 'mutation_p2': 0.001,
+                    'mutation_p3': 0.0005, 'mutation_rate': 0.5, 'pop_size': 10}
 
 #stations_for_run_set = [[1,2,3]]
 stations_for_run_set = [[1],
@@ -240,6 +241,19 @@ stations_for_run_set = [[1],
                         [1, 2, 3, 7, 8],
                         [1, 2, 3, 7, 8, 9]]
 
+stations_for_run_set2 = [[1],
+                        [1,2],
+                        [5],
+                        [5,6],
+                        [5,6,7],
+                        [1,2,3],
+                        [1,2,3,8],
+                        [4,5,6,7],
+                        [9],
+                        [8,9],
+                        [2]]
+
+
 
 def robustness_statistics():
     param_for_run = objective_manual
@@ -247,7 +261,7 @@ def robustness_statistics():
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
     os.mkdir(f'../../{exptime}')
 
-    iterations = 10
+    iterations = 100
     run_by = 'rmse_all'
 
     file_name = f'../ens-{run_by}-{iterations}-runs.csv'
@@ -357,5 +371,5 @@ def all_error_metrics(params, models_to_tests):
 
 
 if __name__ == '__main__':
-    robustness_statistics()
+   robustness_statistics()
     #optimize()
