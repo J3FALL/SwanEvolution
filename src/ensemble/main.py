@@ -188,7 +188,7 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
         mutation=mutation).solution(verbose=False)
 
     exptime2 = str(datetime.datetime.now().time()).replace(":", "-")
-    save_archive_history(archive_history, f'rob-exp-ens-{exptime2}.csv')
+    #save_archive_history(archive_history, f'rob-exp-ens-{exptime2}.csv')
 
     params = history.last().genotype
 
@@ -372,7 +372,7 @@ def all_error_metrics(params, models_to_tests):
 
 
 if __name__ == '__main__':
-    # robustness_statistics()
-    for iter_ind in range(0, 30):
-        optimize([1, 2], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
-                 mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
+    robustness_statistics()
+    #or iter_ind in range(0, 30):
+    #    optimize([1, 2], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
+     #            mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
