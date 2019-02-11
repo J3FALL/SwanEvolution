@@ -47,11 +47,11 @@ def crossover(p1, p2, rate):
         return p1
 
     part1_rate = abs(random.random())
-    part2_rate = 1-part1_rate
+    part2_rate = 1 - part1_rate
 
-    child_params = SWANParams(drf=abs(p1.drf*part1_rate + p2.drf*part2_rate),
-                              cfw=abs(p1.cfw*part1_rate + p2.cfw*part2_rate) ,
-                              stpm=abs(p1.stpm*part1_rate + p2.stpm*part2_rate))
+    child_params = SWANParams(drf=abs(p1.drf * part1_rate + p2.drf * part2_rate),
+                              cfw=abs(p1.cfw * part1_rate + p2.cfw * part2_rate),
+                              stpm=abs(p1.stpm * part1_rate + p2.stpm * part2_rate))
     return child_params
 
 
@@ -85,7 +85,7 @@ def initial_pop_lhs(size, **kwargs):
 
     population = [SWANParams(drf=sample[0], cfw=sample[1], stpm=sample[2]) for sample in samples_grid]
 
-    #population = [SWANParams(drf=1.0, cfw=0.015, stpm=0.00302) for sample in samples_grid]
+    # population = [SWANParams(drf=1.0, cfw=0.015, stpm=0.00302) for sample in samples_grid]
 
     if 'dump' in kwargs and kwargs['dump'] is True:
         dump_population(population, kwargs['file_path'])

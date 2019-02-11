@@ -1,6 +1,7 @@
 import csv
 import datetime
 import os
+import random
 from functools import partial
 from itertools import repeat
 from multiprocessing import Pool
@@ -33,8 +34,6 @@ from src.utils.vis import (
     plot_results,
     plot_population_movement
 )
-
-import random
 
 ALL_STATIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 random.seed(42)
@@ -132,6 +131,7 @@ def optimize(train_stations, max_gens, pop_size, archive_size, crossover_rate, m
 
 def save_archive_history(history, file_name='ens-history.csv'):
     objectives_amount = len(history[0][0].objectives)
+    test_model = model_all_stations()
 
     with open(file_name, 'w', newline='') as csvfile:
         fieldnames = ['idx', 'gen_idx'] + [f'err_{idx + 1}' for idx in range(objectives_amount)] \
@@ -148,8 +148,9 @@ def save_archive_history(history, file_name='ens-history.csv'):
                 row_to_write['idx'] = idx
                 row_to_write['gen_idx'] = gen_idx
 
-                for err_idx in range(objectives_amount):
-                    row_to_write[f'err_{err_idx + 1}'] = ind.objectives[err_idx]
+                metrics = test_model.output(params=ind.genotype)
+                for err_idx in range(metrics):
+                    row_to_write[f'err_{err_idx + 1}'] = metrics[err_idx]
 
                 row_to_write['drf'] = ind.genotype.drf
                 row_to_write['stpm'] = ind.genotype.stpm
@@ -223,7 +224,6 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
 objective_manual = {'a': 0, 'archive_size_rate': 0.5, 'crossover_rate': 0.7,
                     'max_gens': 80, 'mutation_p1': 0.05, 'mutation_p2': 0.001,
                     'mutation_p3': 0.0005, 'mutation_rate': 0.7, 'pop_size': 40}
-
 
 # stations_for_run_set = [[1,2,3]]
 stations_for_run_set = [[1],

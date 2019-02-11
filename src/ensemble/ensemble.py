@@ -3,9 +3,10 @@ import os
 import numpy as np
 
 from src.noice_experiments.model import (
-    SWANParams,
     FakeModel
 )
+
+
 class Ensemble:
     def __init__(self, grid, noise_cases, observations, path_to_forecasts, stations_to_out, error):
         '''
@@ -35,7 +36,7 @@ class Ensemble:
 
     def output(self, params):
         predictions = [model.output(params=params) for model in self.models]
-        #predictions_ref = self.models[0].output(params=params)
+        # predictions_ref = self.models[0].output(params=params)
 
         best_amount = 5
         predictions_best = sorted(predictions, key=lambda p: np.mean(p))[:best_amount]
@@ -55,7 +56,8 @@ class Ensemble:
 
         out = []
         for station in statistics_by_stations.keys():
-            mean = statistics_by_stations[station]['mean']#*statistics_by_stations[station]['std']/np.std(predictions_ref)
+            mean = statistics_by_stations[station][
+                'mean']  # *statistics_by_stations[station]['std']/np.std(predictions_ref)
             out.append(mean)
 
         return out
