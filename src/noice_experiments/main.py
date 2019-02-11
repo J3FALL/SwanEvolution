@@ -370,7 +370,7 @@ def robustness_run(packed_args):
                               save_figures=False,
                               figure_path=figure_path)
 
-    return st_set_id,best
+    return st_set_id, best
 
 
 def init_models_to_tests():
