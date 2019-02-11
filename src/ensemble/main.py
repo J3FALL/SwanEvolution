@@ -209,11 +209,7 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
                      baseline=default_params_forecasts(test_model),
                      save=True, file_path=kwargs['figure_path'])
 
-    metrics = get_rmse_for_all_stations(forecasts,
-                                        wave_watch_results(path_to_results='../../samples/ww-res/',
-                                                           stations=ALL_STATIONS))
-
-    return [history.last(), metrics, ref_metrics]
+    return history.last()
 
 
 # objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
@@ -286,8 +282,10 @@ def robustness_statistics():
             runs_total = len(stations_for_run_set)
             fig_paths = [os.path.join('../..', exptime, str(iteration * runs_total + run)) for run in range(runs_total)]
             all_packed_params = []
-            for st_set_id, station, params, fig_path in zip(stations_for_run_set, repeat(param_for_run), fig_paths):
-                all_packed_params.append([station, params, fig_path])
+
+            runs_range=list(range(0,len(stations_for_run_set)))
+            for st_set_id, station, params, fig_path in zip(runs_range, stations_for_run_set, repeat(param_for_run), fig_paths):
+                all_packed_params.append([st_set_id, station, params, fig_path])
 
             with tqdm(total=runs_total) as progress_bar:
                 for _, out in tqdm(enumerate(p.imap(robustness_run, all_packed_params))):
