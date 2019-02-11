@@ -323,7 +323,8 @@ def robustness_statistics():
             runs_total = len(stations_for_run_set)
             fig_paths = [os.path.join('../..', exptime, str(iteration * runs_total + run)) for run in range(runs_total)]
             all_packed_params = []
-            for st_set_id, station, params, fig_path in zip(list(range(0,len(stations_for_run_set))),stations_for_run_set, repeat(param_for_run), fig_paths):
+            runs_range=list(range(0,len(stations_for_run_set)))
+            for st_set_id, station, params, fig_path in zip(runs_range,stations_for_run_set, repeat(param_for_run), fig_paths):
                 all_packed_params.append([st_set_id,station, params, fig_path])
 
             with tqdm(total=runs_total) as progress_bar:
