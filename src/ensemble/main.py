@@ -134,7 +134,7 @@ def save_archive_history(history, file_name='ens-history.csv'):
     test_model = model_all_stations()
 
     with open(file_name, 'w', newline='') as csvfile:
-        fieldnames = ['idx', 'gen_idx'] + [f'err_{idx + 1}' for idx in range(objectives_amount)] \
+        fieldnames = ['idx', 'gen_idx'] + [f'err_{idx + 1}' for idx in range(len(ALL_STATIONS))] \
                      + ['drf', 'stpm', 'cfw']
 
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -286,21 +286,21 @@ def robustness_statistics():
             runs_total = len(stations_for_run_set)
             fig_paths = [os.path.join('../..', exptime, str(iteration * runs_total + run)) for run in range(runs_total)]
             all_packed_params = []
-            for station, params, fig_path in zip(stations_for_run_set, repeat(param_for_run), fig_paths):
+            for st_set_id, station, params, fig_path in zip(stations_for_run_set, repeat(param_for_run), fig_paths):
                 all_packed_params.append([station, params, fig_path])
 
             with tqdm(total=runs_total) as progress_bar:
-                for _, out in tqdm(enumerate(p.imap_unordered(robustness_run, all_packed_params))):
+                for _, out in tqdm(enumerate(p.imap(robustness_run, all_packed_params))):
                     results.append(out)
                     progress_bar.update()
 
         for idx, out in enumerate(results):
-            best, metrics, ref_metrics = out
+            st_set_id_from_param, best = out
 
             with open(file_name, 'a', newline='') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-                row_to_write = {'ID': iteration * runs_total + idx, 'IterId': iteration, 'SetId': idx,
+                row_to_write = {'ID': iteration * runs_total + idx, 'IterId': iteration, 'SetId': st_set_id_from_param,
                                 'drf': best.genotype.drf,
                                 'cfw': best.genotype.cfw,
                                 'stpm': best.genotype.stpm}
@@ -317,7 +317,7 @@ def robustness_statistics():
 
 
 def robustness_run(packed_args):
-    stations_for_run, param_for_run, figure_path = packed_args
+    st_set_id, stations_for_run, param_for_run, figure_path = packed_args
     archive_size = round(param_for_run['archive_size_rate'] * param_for_run['pop_size'])
     mutation_value_rate = [param_for_run['mutation_p1'], param_for_run['mutation_p2'],
                            param_for_run['mutation_p3']]
@@ -331,7 +331,7 @@ def robustness_run(packed_args):
                                                        save_figures=True,
                                                        figure_path=figure_path)
 
-    return best, metrics, ref_metrics
+    return st_set_id, best
 
 
 def init_models_to_tests():
