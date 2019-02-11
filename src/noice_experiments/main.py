@@ -252,9 +252,12 @@ objective_manual_old = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7
                         'max_gens': 15, 'mutation_p1': 0.1, 'mutation_p2': 0.001,
                         'mutation_p3': 0.0001, 'mutation_rate': 0.7, 'pop_size': 20}
 
-objective_manual = {'a': 0, 'archive_size_rate': 0.5, 'crossover_rate': 0.5,
-                    'max_gens': 20, 'mutation_p1': 0.05, 'mutation_p2': 0.001,
-                    'mutation_p3': 0.0005, 'mutation_rate': 0.5, 'pop_size': 10}
+objective_manual = {'a': 0, 'archive_size_rate': 0.5, 'crossover_rate': 0.7,
+                    'max_gens': 80, 'mutation_p1': 0.05, 'mutation_p2': 0.001,
+                    'mutation_p3': 0.0005, 'mutation_rate': 0.7, 'pop_size': 40}
+
+#max_gens = 80, pop_size = 40, archive_size = 20, crossover_rate = 0.7, mutation_rate = 0.7,
+#                        mutation_value_rate=[0.05, 0.001, 0.0005]
 
 stations_for_run_set = [[1],
                         [1, 2],
@@ -297,7 +300,7 @@ def robustness_statistics():
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
     os.mkdir(f'../../{exptime}')
 
-    iterations = 100
+    iterations = 10
     run_by = 'rmse_all'
 
     file_name = f'../bl-{run_by}-{iterations}-runs.csv'
@@ -422,12 +425,12 @@ def prepare_all_fake_models():
 
 
 if __name__ == '__main__':
-    # robustness_statistics()
+     robustness_statistics()
     # prepare_all_fake_models()
 
-    for iter_ind in range(0, 30):
-        optimize_by_ww3_obs([1, 2], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
-                            mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
+    #for iter_ind in range(0, 30):
+    #    optimize_by_ww3_obs([1, 2], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
+    #                        mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
     # res=all_error_metrics(params=SWANParams(drf=1.0,
     #                                                        cfw=0.015,
     #                                                        stpm=0.00302), models_to_tests=init_models_to_tests())
