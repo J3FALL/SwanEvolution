@@ -249,9 +249,14 @@ def run_robustness_exp(max_gens, pop_size, archive_size, crossover_rate, mutatio
     return [history.last()]
 
 
-objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
-                    'max_gens': 10, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
-                    'mutation_p3': 0.001, 'mutation_rate': 0.7, 'pop_size': 20}
+objective_manual_old = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
+                    'max_gens': 15, 'mutation_p1': 0.1, 'mutation_p2': 0.001,
+                    'mutation_p3': 0.0001, 'mutation_rate': 0.7, 'pop_size': 20}
+
+
+objective_manual = {'a': 0, 'archive_size_rate': 0.5, 'crossover_rate': 0.5,
+                    'max_gens': 20, 'mutation_p1': 0.05, 'mutation_p2': 0.001,
+                    'mutation_p3': 0.0005, 'mutation_rate': 0.5, 'pop_size': 10}
 
 
 
@@ -274,6 +279,18 @@ stations_for_run_set = [[1],
                         [1, 2, 3, 7, 8],
                         [1, 2, 3, 7, 8, 9]]
 
+stations_for_run_set2 = [[1],
+                        [1,2],
+                        [5],
+                        [5,6],
+                        [5,6,7],
+                        [1,2,3],
+                        [1,2,3,8],
+                        [4,5,6,7],
+                        [9],
+                        [8,9],
+                        [2]]
+
 #stations_for_run_set = [[1,2,3,4,5,6]]
 
 
@@ -284,7 +301,7 @@ def robustness_statistics():
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
     os.mkdir(f'../../{exptime}')
 
-    iterations = 10
+    iterations = 100
     run_by = 'rmse_all'
 
     file_name = f'../bl-{run_by}-{iterations}-runs.csv'
@@ -413,9 +430,10 @@ def prepare_all_fake_models():
 if __name__ == '__main__':
     robustness_statistics()
     # prepare_all_fake_models()
-    #optimize_by_ww3_obs(max_gens=15, pop_size=20, archive_size=5, crossover_rate=0.7, mutation_rate=0.7,
-    #                    mutation_value_rate=[0.1, 0.001, 0.0001])
+    #optimize_by_ww3_obs(max_gens=10, pop_size=10, archive_size=5, crossover_rate=0.5, mutation_rate=0.5,
+    #                    mutation_value_rate=[0.05, 0.001, 0.0005])
+    #res=all_error_metrics(params=SWANParams(drf=1.0,
+    #                                                        cfw=0.015,
+    #                                                        stpm=0.00302), models_to_tests=init_models_to_tests())
 
-#objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
-#                    'max_gens': 15, 'mutation_p1': 0.1, 'mutation_p2': 0.001,
-#                    'mutation_p3': 0.0001, 'mutation_rate': 0.7, 'pop_size': 20}
+    # print(res)
