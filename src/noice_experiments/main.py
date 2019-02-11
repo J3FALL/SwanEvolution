@@ -170,7 +170,7 @@ def save_archive_history(history, file_name='history.csv'):
     test_model = model_all_stations()
 
     with open(file_name, 'w', newline='') as csvfile:
-        fieldnames = ['idx', 'gen_idx'] + [f'err_{idx + 1}' for idx in range(objectives_amount)] \
+        fieldnames = ['idx', 'gen_idx'] + [f'err_{idx + 1}' for idx in range(len(ALL_STATIONS))] \
                      + ['drf', 'stpm', 'cfw']
 
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -245,7 +245,7 @@ def run_robustness_exp(max_gens, pop_size, archive_size, crossover_rate, mutatio
                      baseline=default_params_forecasts(test_model),
                      save=True, file_path=kwargs['figure_path'])
 
-    return [history.last()]
+    return history.last()
 
 
 objective_manual_old = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
@@ -277,6 +277,7 @@ stations_for_run_set = [[1],
                         [1, 2, 3, 7],
                         [1, 2, 3, 7, 8],
                         [1, 2, 3, 7, 8, 9]]
+
 
 stations_for_run_set2 = [[1],
                          [1, 2],
@@ -322,21 +323,21 @@ def robustness_statistics():
             runs_total = len(stations_for_run_set)
             fig_paths = [os.path.join('../..', exptime, str(iteration * runs_total + run)) for run in range(runs_total)]
             all_packed_params = []
-            for station, params, fig_path in zip(stations_for_run_set, repeat(param_for_run), fig_paths):
-                all_packed_params.append([station, params, fig_path])
+            for st_set_id, station, params, fig_path in zip(list(range(0,len(stations_for_run_set))),stations_for_run_set, repeat(param_for_run), fig_paths):
+                all_packed_params.append([st_set_id,station, params, fig_path])
 
             with tqdm(total=runs_total) as progress_bar:
-                for _, out in tqdm(enumerate(p.imap_unordered(robustness_run, all_packed_params))):
+                for _, out in tqdm(enumerate(p.imap(robustness_run, all_packed_params))):
                     results.append(out)
                     progress_bar.update()
 
         for idx, out in enumerate(results):
-            best = out[0]
+            st_set_id_from_param, best = out
 
             with open(file_name, 'a', newline='') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-                row_to_write = {'ID': iteration * runs_total + idx, 'IterId': iteration, 'SetId': idx,
+                row_to_write = {'ID': iteration * runs_total + idx, 'IterId': iteration, 'SetId': st_set_id_from_param,
                                 'drf': best.genotype.drf,
                                 'cfw': best.genotype.cfw,
                                 'stpm': best.genotype.stpm}
@@ -353,7 +354,8 @@ def robustness_statistics():
 
 
 def robustness_run(packed_args):
-    stations_for_run, param_for_run, figure_path = packed_args
+    st_set_id, stations_for_run, param_for_run, figure_path = packed_args
+    print(stations_for_run)
     archive_size = round(param_for_run['archive_size_rate'] * param_for_run['pop_size'])
     mutation_value_rate = [param_for_run['mutation_p1'], param_for_run['mutation_p2'],
                            param_for_run['mutation_p3']]
@@ -367,7 +369,7 @@ def robustness_run(packed_args):
                               save_figures=False,
                               figure_path=figure_path)
 
-    return best
+    return st_set_id,best
 
 
 def init_models_to_tests():
@@ -430,10 +432,14 @@ def reference_metrics():
 
 
 if __name__ == '__main__':
-    # robustness_statistics()
-    optimize_by_ww3_obs([1, 2], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
-                        mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=0, plot_figures=False)
+    robustness_statistics()
+    #for iter_id in range(0,10):
+    #    optimize_by_ww3_obs([1], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
+    #                        mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_id, plot_figures=False)
 
     # for iter_ind in range(0, 30):
     #    optimize_by_ww3_obs([1, 2], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
     #                        mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
+
+    #print(all_error_metrics(params=SWANParams(drf=1.5997924713924645, cfw=0.030010929248229738, stpm=0.0024975825926832843),
+    #                  models_to_tests=init_models_to_tests()))
