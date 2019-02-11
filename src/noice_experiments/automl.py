@@ -1,7 +1,9 @@
-from src.noice_experiments.main import run_robustess_exp
-from hyperopt import hp
-from hyperopt import fmin, tpe, space_eval
 import time
+
+from hyperopt import fmin, tpe, space_eval
+from hyperopt import hp
+
+from src.noice_experiments.main import run_robustess_exp
 
 space = hp.choice('a',
                   [
@@ -22,7 +24,7 @@ best_score = 99999
 def objective(args, criteria_id):
     max_gens, pop_size, archive_size_rate, crossover_rate, mutation_rate, p1, p2, p3 = args
 
-    print (time.strftime("%Y-%m-%d %H:%M"))
+    print(time.strftime("%Y-%m-%d %H:%M"))
 
     print("OBJ", max_gens, pop_size, archive_size_rate, crossover_rate, mutation_rate, p1, p2, p3)
     archive_size = round(archive_size_rate * pop_size)

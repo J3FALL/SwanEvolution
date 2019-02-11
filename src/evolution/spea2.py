@@ -1,14 +1,14 @@
 import copy
 import random
-from datetime import datetime
 from math import sqrt
 from operator import itemgetter
 
 import numpy as np
 
-#random.seed(datetime.now())
-
 from src.evolution.raw_fitness import raw_fitness
+
+
+# random.seed(datetime.now())
 
 
 class SPEA2:
