@@ -319,7 +319,7 @@ def robustness_run(packed_args):
     archive_size = round(param_for_run['archive_size_rate'] * param_for_run['pop_size'])
     mutation_value_rate = [param_for_run['mutation_p1'], param_for_run['mutation_p2'],
                            param_for_run['mutation_p3']]
-    best, metrics, ref_metrics = run_robustess_exp_ens(max_gens=param_for_run['max_gens'],
+    best = run_robustess_exp_ens(max_gens=param_for_run['max_gens'],
                                                        pop_size=param_for_run['pop_size'],
                                                        archive_size=archive_size,
                                                        crossover_rate=param_for_run['crossover_rate'],
