@@ -220,9 +220,10 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
 #                    'mutation_p3': 0.0001, 'mutation_rate': 0.7, 'pop_size': 20}
 
 
-objective_manual = {'a': 0, 'archive_size_rate': 0.5, 'crossover_rate': 0.5,
-                    'max_gens': 20, 'mutation_p1': 0.05, 'mutation_p2': 0.001,
-                    'mutation_p3': 0.0005, 'mutation_rate': 0.5, 'pop_size': 10}
+objective_manual = {'a': 0, 'archive_size_rate': 0.5, 'crossover_rate': 0.7,
+                    'max_gens': 80, 'mutation_p1': 0.05, 'mutation_p2': 0.001,
+                    'mutation_p3': 0.0005, 'mutation_rate': 0.7, 'pop_size': 40}
+
 
 # stations_for_run_set = [[1,2,3]]
 stations_for_run_set = [[1],
