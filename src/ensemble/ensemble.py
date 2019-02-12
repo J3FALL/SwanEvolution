@@ -38,7 +38,7 @@ class Ensemble:
         predictions = [model.output(params=params) for model in self.models]
         # predictions_ref = self.models[0].output(params=params)
 
-        best_amount = 5
+        best_amount = 7
         predictions_best = sorted(predictions, key=lambda p: np.mean(p))[:best_amount]
 
         statistics_by_stations = {}

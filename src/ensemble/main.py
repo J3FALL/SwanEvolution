@@ -91,7 +91,7 @@ def optimize(train_stations, max_gens, pop_size, archive_size, crossover_rate, m
         [obs.time_series() for obs in
          wave_watch_results(path_to_results='../../samples/ww-res/', stations=train_stations)]
 
-    ens = Ensemble(grid=grid, noise_cases=[0, 1, 2, 3, 4, 5, 6, 7, 15, 16, 17, 18, 25, 26], observations=ww3_obs,
+    ens = Ensemble(grid=grid, noise_cases=[0, 1, 2, 3, 4, 5, 6, 7], observations=ww3_obs,
                    path_to_forecasts='../../../wind-postproc/out',
                    stations_to_out=train_stations, error=error_rmse_all)
 
@@ -149,7 +149,7 @@ def save_archive_history(history, file_name='ens-history.csv'):
                 row_to_write['gen_idx'] = gen_idx
 
                 metrics = test_model.output(params=ind.genotype)
-                for err_idx in range(metrics):
+                for err_idx in range(0,len(metrics)):
                     row_to_write[f'err_{err_idx + 1}'] = metrics[err_idx]
 
                 row_to_write['drf'] = ind.genotype.drf
@@ -173,7 +173,7 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
                                                                stations=ALL_STATIONS))
 
     old_path = '../../../wind-postproc/out'
-    train_model = Ensemble(grid=grid, noise_cases=[0, 1, 2, 3, 4, 5, 6, 7, 15, 16, 17, 18, 25, 26],
+    train_model = Ensemble(grid=grid, noise_cases=[0, 1, 2, 3, 4, 5, 6],#, 7, 15, 16, 17, 18, 25, 26],
                            observations=ww3_obs,
                            path_to_forecasts=old_path,
                            stations_to_out=stations, error=error_rmse_all)
@@ -217,9 +217,9 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
 #                    'mutation_p3': 0.0001, 'mutation_rate': 0.7, 'pop_size': 20}
 
 
-objective_manual = {'a': 0, 'archive_size_rate': 0.5, 'crossover_rate': 0.7,
-                    'max_gens': 80, 'mutation_p1': 0.05, 'mutation_p2': 0.001,
-                    'mutation_p3': 0.0005, 'mutation_rate': 0.7, 'pop_size': 40}
+objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
+                    'max_gens': 60, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
+                    'mutation_p3': 0.001, 'mutation_rate': 0.7, 'pop_size': 20}
 
 # stations_for_run_set = [[1,2,3]]
 stations_for_run_set = [[1],
@@ -252,6 +252,26 @@ stations_for_run_set2 = [[1],
                          [9],
                          [8, 9],
                          [2]]
+
+stations_for_run_set = [[1],
+                        [2],
+                        [3],
+                        [4],
+                        [5],
+                        [6],
+                        [7],
+                        [8],
+                        [9],
+                        [1, 4],
+                        [2,5],
+                        [4,8],
+                        [5, 9],
+                        [1, 2,3],
+                        [1, 4, 9],
+                        [1,2, 4, 7, 9],
+                        [1, 2,3,7,8,9],
+                        [1, 2, 3,4,5,6]]
+
 
 
 def robustness_statistics():
@@ -373,6 +393,6 @@ def all_error_metrics(params, models_to_tests):
 
 if __name__ == '__main__':
     robustness_statistics()
-    #or iter_ind in range(0, 30):
-    #    optimize([1, 2], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
-     #            mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
+    #for iter_ind in range(0, 30):
+    #    optimize([1,2,3,4,5,6], max_gens=10, pop_size=10, archive_size=5, crossover_rate=0.7, mutation_rate=0.7,
+    #             mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
