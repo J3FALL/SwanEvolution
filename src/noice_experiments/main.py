@@ -252,14 +252,14 @@ objective_manual_old = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7
                         'max_gens': 15, 'mutation_p1': 0.1, 'mutation_p2': 0.001,
                         'mutation_p3': 0.0001, 'mutation_rate': 0.7, 'pop_size': 20}
 
-objective_manual = {'a': 0, 'archive_size_rate': 0.5, 'crossover_rate': 0.7,
-                    'max_gens': 80, 'mutation_p1': 0.05, 'mutation_p2': 0.001,
-                    'mutation_p3': 0.0005, 'mutation_rate': 0.7, 'pop_size': 40}
+objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
+                    'max_gens': 60, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
+                    'mutation_p3': 0.001, 'mutation_rate': 0.7, 'pop_size': 20}
 
 # max_gens = 80, pop_size = 40, archive_size = 20, crossover_rate = 0.7, mutation_rate = 0.7,
 #                        mutation_value_rate=[0.05, 0.001, 0.0005]
 
-stations_for_run_set = [[1],
+stations_for_run_set3 = [[1],
                         [1, 2],
                         [1, 2, 3],
                         [1, 2, 3, 4],
@@ -291,6 +291,25 @@ stations_for_run_set2 = [[1],
                          [8, 9],
                          [2]]
 
+stations_for_run_set = [[1],
+                        [2],
+                        [3],
+                        [4],
+                        [5],
+                        [6],
+                        [7],
+                        [8],
+                        [9],
+                        [1, 4],
+                        [2,5],
+                        [4,8],
+                        [5, 9],
+                        [1, 2,3],
+                        [1, 4, 9],
+                        [1,2, 4, 7, 9],
+                        [1, 2,3,7,8,9],
+                        [1, 2, 3,4,5,6]]
+
 
 # stations_for_run_set = [[1,2,3,4,5,6]]
 
@@ -301,7 +320,7 @@ def robustness_statistics():
     exptime = str(datetime.datetime.now().time()).replace(":", "-")
     os.mkdir(f'../../{exptime}')
 
-    iterations = 10
+    iterations = 100
     run_by = 'rmse_all'
 
     file_name = f'../bl-{run_by}-{iterations}-runs.csv'
@@ -433,14 +452,15 @@ def reference_metrics():
 
 
 if __name__ == '__main__':
+    #print(reference_metrics())
     robustness_statistics()
     #for iter_id in range(0,10):
     #    optimize_by_ww3_obs([1], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
     #                        mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_id, plot_figures=False)
 
-    # for iter_ind in range(0, 30):
-    #    optimize_by_ww3_obs([1, 2], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
-    #                        mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
+     #for iter_ind in range(0, 30):
+     #   optimize_by_ww3_obs([1, 2,3,4,5,6], max_gens=10, pop_size=10, archive_size=5, crossover_rate=0.7, mutation_rate=0.7,
+     #                       mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
 
     #print(all_error_metrics(params=SWANParams(drf=1.5997924713924645, cfw=0.030010929248229738, stpm=0.0024975825926832843),
     #                  models_to_tests=init_models_to_tests()))
