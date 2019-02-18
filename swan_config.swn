@@ -1,0 +1,80 @@
+PROJECT  'Karasea'  'L14'
+
+SET NAUTical
+COORDINATES CARTesian
+MODE NONSTationary
+
+CGRID  REGular -1400000. -2600000. 0.  1660000.0  1736000.0  119  124  CIRCLE 36 0.05 1.0 41
+
+INPGRID BOTTOM -1400000. -2600000. 0. 119  124  14000.0  14000.0
+READINP BOTTOM -1. 'D:\Karsky_SWAN\stereo\input-data\bathy.bot' 3 0 FREE
+  
+INITial HOTSTART 'D:\Karsky_SWAN\stereo\pre-start'
+
+FRAme   'frame_2'  -1400000. -2600000. 0.  1660000.0  1736000.0 119 124
+
+
+
+INPGRID WIND -1400000. -2600000. 0. 119  124  14000.0  14000.0                      &
+NONSTATIONARY 20140201.000000 6 HR 20141231.180000
+  
+READINP WIND 0.4 'D:\Karsky_SWAN\stereo\input-data\ens\era-uv-2014-ns9.txt' 3 0 1 0 FREE
+
+GEN3 cds2=2.36e-05 stpm=0.0025
+
+BREAKING 
+
+FRiction COLLins cfw=0.04
+
+
+QUADRUPL
+
+TRIAD
+
+DIFFRACtion   
+
+PROP BSBT
+
+ POINTS 'K1a'    -636852.0 -1617291.0
+ POINTS 'K2a'    -807467.0 -1599752.0
+ POINTS 'K3a'    -541885.0 -1742416.0
+ 
+ POINTS 'K4a'    -518000.0 -1956000.0
+ POINTS 'K5a'    -490000.0 -1858000.0
+ POINTS 'K6a'    -462000.0 -1886000.0
+ 
+ POINTS 'K7a'    -602000.0 -1900000.0
+ POINTS 'K8a'    -336000.0 -1676000.0
+ POINTS 'K9a'    -560000.0 -1256000.0
+ 
+TABLE  'K1a' HEAD 'D:\Karsky_SWAN\results\K1a_ns9_run121.tab' TIME   &
+        HSign    &
+	OUTput  20140814.120000  3 HR  
+TABLE  'K2a' HEAD 'D:\Karsky_SWAN\results\K2a_ns9_run121.tab' TIME   &
+        HSign    &
+	OUTput  20140814.120000  3 HR  
+TABLE  'K3a' HEAD 'D:\Karsky_SWAN\results\K3a_ns9_run121.tab' TIME   &
+        HSign    &
+	OUTput  20140814.120000  3 HR  
+TABLE  'K4a' HEAD 'D:\Karsky_SWAN\results\K4a_ns9_run121.tab' TIME   &
+	HSign    &
+OUTput  20140814.120000  3 HR  
+TABLE  'K5a' HEAD 'D:\Karsky_SWAN\results\K5a_ns9_run121.tab' TIME   &
+	HSign    &
+OUTput  20140814.120000  3 HR  
+TABLE  'K6a' HEAD 'D:\Karsky_SWAN\results\K6a_ns9_run121.tab' TIME   &
+	HSign    &
+OUTput  20140814.120000  3 HR  
+TABLE  'K7a' HEAD 'D:\Karsky_SWAN\results\K7a_ns9_run121.tab' TIME   &
+	HSign    &
+OUTput  20140814.120000  3 HR  
+TABLE  'K8a' HEAD 'D:\Karsky_SWAN\results\K8a_ns9_run121.tab' TIME   &
+	HSign    &
+OUTput  20140814.120000  3 HR  
+TABLE  'K9a' HEAD 'D:\Karsky_SWAN\results\K9a_ns9_run121.tab' TIME   &
+	HSign    &
+OUTput  20140814.120000  3 HR  
+		
+COMPUTE  NONSTat 20140814.120000  120 MIN 20140915.000000  
+
+STOP
