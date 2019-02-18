@@ -74,7 +74,7 @@ class SPEA2:
         def last(self):
             return SPEA2.ErrorHistory.Point() if len(self.history) == 0 else self.history[-1]
 
-    def solution(self, verbose=True):
+    def solution(self, verbose=True, **kwargs):
         archive_history = []
         history = SPEA2.ErrorHistory()
 
@@ -89,7 +89,10 @@ class SPEA2:
                 best_gens = best.genotype
 
                 if verbose:
-                    print_new_best_individ(best, gen)
+                    if 'print_fun' in kwargs:
+                        kwargs['print_fun'](best, gen)
+                    else:
+                        print_new_best_individ(best, gen)
 
                 history.add_new(best_gens, gen, mean_obj(best),
                                 rmse(best))
