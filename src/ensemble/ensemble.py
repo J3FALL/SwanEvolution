@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 from src.noice_experiments.model import (
     FakeModel
 )
@@ -28,32 +30,28 @@ class Ensemble:
         for noise in noise_cases:
             models.append(FakeModel(grid_file=self.grid, observations=self.observations,
                                     stations_to_out=self.stations_to_out, error=self.error,
-                                    forecasts_path=os.path.join(self.forecasts_dir, str(noise)), noise_run=noise))
+                                    forecasts_path=os.path.join(self.forecasts_dir), noise_run=noise))
 
         return models
 
     def output(self, params):
         predictions = [model.output(params=params) for model in self.models]
 
+        best_amount = 7
+        predictions_best = sorted(predictions, key=lambda p: np.mean(p))[:best_amount]
+
         statistics_by_stations = {}
         for station_idx in range(len(self.stations_to_out)):
-            predictions_for_station = column(predictions, station_idx)
+            predictions_for_station = column(predictions_best, station_idx)
 
-            predictions_coeff = 1 - abs(predictions_for_station / predictions_for_station[0] - 1)
-
-            predictions_for_station = predictions_for_station * predictions_coeff + predictions_for_station[0] * (
-                    1 - predictions_coeff)
-
-            statistics_by_stations[station_idx] = {'min': min(predictions_for_station),
-                                                   'max': max(predictions_for_station),
-                                                   'mean': sum(predictions_for_station) / len(predictions_for_station)}
+            statistics_by_stations[station_idx] = {'std': np.std(predictions_for_station),
+                                                   'mean': np.mean(predictions_for_station),
+                                                   'max': np.max(predictions_for_station)}
 
         out = []
         for station in statistics_by_stations.keys():
-            delta = abs(statistics_by_stations[station]['min'] - statistics_by_stations[station]['max'])
-            quality = statistics_by_stations[station]['mean']
-
-            out.append(delta + quality)
+            mean = statistics_by_stations[station]['mean']
+            out.append(mean)
 
         return out
 

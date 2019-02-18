@@ -46,13 +46,12 @@ def crossover(p1, p2, rate):
     if random.random() >= rate:
         return p1
 
-    drf = p1.drf if random.randint(0, 1) else p2.drf
-    cfw = p1.cfw if random.randint(0, 1) else p2.cfw
-    stpm = p1.stpm if random.randint(0, 1) else p2.stpm
+    part1_rate = abs(random.random())
+    part2_rate = 1 - part1_rate
 
-    child_params = SWANParams(drf=drf,
-                              cfw=cfw,
-                              stpm=stpm)
+    child_params = SWANParams(drf=abs(p1.drf * part1_rate + p2.drf * part2_rate),
+                              cfw=abs(p1.cfw * part1_rate + p2.cfw * part2_rate),
+                              stpm=abs(p1.stpm * part1_rate + p2.stpm * part2_rate))
     return child_params
 
 
@@ -60,7 +59,7 @@ def mutation(individ, rate, mutation_value_rate):
     params = ['drf', 'cfw', 'stpm']
     if random.random() >= rate:
         param_to_mutate = params[random.randint(0, 2)]
-        mutation_ratio = abs(np.random.normal(1, 5, 1)[0])
+        mutation_ratio = abs(np.random.RandomState().normal(1, 1.5, 1)[0])
 
         sign = 1 if random.random() < 0.5 else -1
         if param_to_mutate is 'drf':
@@ -85,6 +84,8 @@ def initial_pop_lhs(size, **kwargs):
         samples_grid[:, idx] = norm(loc=np.mean(params_range), scale=np.std(params_range)).ppf(samples_grid[:, idx])
 
     population = [SWANParams(drf=sample[0], cfw=sample[1], stpm=sample[2]) for sample in samples_grid]
+
+    # population = [SWANParams(drf=1.0, cfw=0.015, stpm=0.00302) for sample in samples_grid]
 
     if 'dump' in kwargs and kwargs['dump'] is True:
         dump_population(population, kwargs['file_path'])

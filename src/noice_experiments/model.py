@@ -22,6 +22,8 @@ drf_range = [0.2, 0.4, 0.6000000000000001, 0.8, 1.0, 1.2, 1.4, 1.599999999999999
 cfw_range = [0.005, 0.01, 0.015, 0.02, 0.025, 0.030000000000000002, 0.035, 0.04, 0.045, 0.049999999999999996]
 stpm_range = [0.001, 0.0025, 0.004, 0.0055, 0.006999999999999999, 0.008499999999999999, 0.009999999999999998]
 
+GRID_PATH = '../../grid'
+
 
 class SWANParams:
 
@@ -97,17 +99,18 @@ class FakeModel:
         # calc fitness for every point
 
         st_set_id = ("-".join(str(self.stations)))
-        grid_file_path = f'../grid-saved-rmse_{self.noise_run}_st{st_set_id}.pik'
+        file_path = f'grid-saved-{self.error.__name__}_{self.noise_run}_st{st_set_id}.pik'
+
+        grid_file_path = os.path.join(GRID_PATH, file_path)
 
         if not os.path.isfile(grid_file_path):
-            for i in range(0, self.grid.shape[0]):
-                for j in range(0, self.grid.shape[1]):
-                    for k in range(0, self.grid.shape[2]):
-                        forecasts = [forecast for forecast in self.grid[i, j, k]]
-                        stat_ind = 0
-                        for forecast, observation in zip(forecasts, self.observations):
-                            self.err_grid[i, j, k, stat_ind] = self.error(forecast, observation)
-                            stat_ind = stat_ind + 1
+            grid_idxs = self.__grid_idxs()
+
+            for i, j, k in grid_idxs:
+                forecasts = [forecast for forecast in self.grid[i, j, k]]
+                for forecast, observation in zip(forecasts, self.observations):
+                    station_idx = forecasts.index(forecast)
+                    self.err_grid[i, j, k, station_idx] = self.error(forecast, observation)
 
             pickle_out = open(grid_file_path, 'wb')
             pickle.dump(self.err_grid, pickle_out)
@@ -116,6 +119,22 @@ class FakeModel:
         else:
             with open(grid_file_path, 'rb') as f:
                 self.err_grid = pickle.load(f)
+
+    def __grid_idxs(self):
+        idxs = []
+        for i in range(self.grid.shape[0]):
+            for j in range(self.grid.shape[1]):
+                for k in range(self.grid.shape[2]):
+                    idxs.append([i, j, k])
+        return idxs
+
+    def _errors_at_point(self, packed_values):
+        forecasts, observations = packed_values
+
+        errors = []
+        for forecast, observation in zip(forecasts, observations):
+            errors.append(self.error(forecast, observation))
+        return errors
 
     def _empty_grid(self):
         return np.empty((len(self.grid_file.drf_grid),
@@ -183,7 +202,7 @@ class FakeModel:
 
         def _station_series(self):
             hsig_idx = 1
-            return [float(line.split()[hsig_idx]) for line in self.file.time_series()]
+            return [float(line.split(',')[hsig_idx]) for line in self.file.time_series()]
 
 
 class CSVGridFile:
