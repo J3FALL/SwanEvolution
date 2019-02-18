@@ -36,7 +36,6 @@ class Ensemble:
 
     def output(self, params):
         predictions = [model.output(params=params) for model in self.models]
-        # predictions_ref = self.models[0].output(params=params)
 
         best_amount = 7
         predictions_best = sorted(predictions, key=lambda p: np.mean(p))[:best_amount]
@@ -45,19 +44,13 @@ class Ensemble:
         for station_idx in range(len(self.stations_to_out)):
             predictions_for_station = column(predictions_best, station_idx)
 
-            # predictions_coeff = 1 - abs(predictions_for_station / predictions_for_station[0] - 1)
-            #
-            # predictions_for_station = predictions_for_station * predictions_coeff + predictions_for_station[0] * (
-            #         1 - predictions_coeff)
-
             statistics_by_stations[station_idx] = {'std': np.std(predictions_for_station),
                                                    'mean': np.mean(predictions_for_station),
                                                    'max': np.max(predictions_for_station)}
 
         out = []
         for station in statistics_by_stations.keys():
-            mean = statistics_by_stations[station][
-                'mean']  # *statistics_by_stations[station]['std']/np.std(predictions_ref)
+            mean = statistics_by_stations[station]['mean']
             out.append(mean)
 
         return out

@@ -11,7 +11,6 @@ from tqdm import tqdm
 
 from src.evolution.spea2 import SPEA2
 from src.noice_experiments.errors import (
-    error_dtw_all,
     error_rmse_all,
     error_mae_all,
     error_mae_peak,
@@ -21,8 +20,7 @@ from src.noice_experiments.evo_operators import (
     calculate_objectives_interp,
     crossover,
     mutation,
-    initial_pop_lhs,
-    default_initial_pop
+    initial_pop_lhs
 )
 from src.noice_experiments.model import (
     CSVGridFile,
@@ -30,7 +28,6 @@ from src.noice_experiments.model import (
 )
 from src.noice_experiments.model import SWANParams
 from src.utils.files import (
-    real_obs_from_files,
     wave_watch_results
 )
 from src.utils.vis import (
@@ -45,8 +42,6 @@ random.seed(42)
 
 
 def get_rmse_for_all_stations(forecasts, observations):
-    # assert len(observations) == len(forecasts) == 3
-
     time = np.linspace(1, 253, num=len(forecasts[0].hsig_series))
 
     obs_series = []
@@ -58,34 +53,6 @@ def get_rmse_for_all_stations(forecasts, observations):
         results_for_stations[idx] = np.sqrt(
             np.mean((np.array(forecasts[idx].hsig_series) - np.array(obs_series[idx])) ** 2))
     return results_for_stations
-
-
-def optimize_by_real_obs():
-    grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
-    obs = [obs.time_series(from_date="20140814.120000", to_date="20140915.000000") for obs in real_obs_from_files()]
-    fake_model = FakeModel(grid_file=grid, observations=obs, stations_to_out=[1, 2, 3], error=error_dtw_all,
-                           forecasts_path='../../../wind-noice-runs/results_fixed/0', noise_run=0)
-
-    history, archive_history = SPEA2(
-        params=SPEA2.Params(max_gens=100, pop_size=10, archive_size=5,
-                            crossover_rate=0.8, mutation_rate=0.6, mutation_value_rate=[0.1, 0.005, 0.005]),
-        init_population=default_initial_pop,
-        objectives=partial(calculate_objectives_interp, fake_model),
-        crossover=crossover,
-        mutation=mutation).solution()
-
-    plot_population_movement(archive_history, grid)
-    params = history.last().genotype
-
-    forecasts = []
-    for row in grid.rows:
-        if set(row.model_params.params_list()) == set(params.params_list()):
-            drf_idx, cfw_idx, stpm_idx = fake_model.params_idxs(row.model_params)
-            forecasts = fake_model.grid[drf_idx, cfw_idx, stpm_idx]
-
-    observations = real_obs_from_files()
-    plot_results(forecasts=forecasts, observations=observations)
-    return history
 
 
 def model_all_stations():
@@ -165,8 +132,6 @@ def optimize_by_ww3_obs(train_stations, max_gens, pop_size, archive_size, crosso
 
 
 def save_archive_history(history, file_name='history.csv'):
-    objectives_amount = len(history[0][0].objectives)
-
     test_model = model_all_stations()
 
     with open(file_name, 'w', newline='') as csvfile:
@@ -197,9 +162,6 @@ def save_archive_history(history, file_name='history.csv'):
 
 def run_robustness_exp(max_gens, pop_size, archive_size, crossover_rate, mutation_rate, mutation_value_rate, stations,
                        **kwargs):
-    # random.seed(datetime.datetime.now())
-    # np.random.seed(int(time.time()))
-
     grid = CSVGridFile('../../samples/wind-exp-params-new.csv')
     ww3_obs = \
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
@@ -207,11 +169,6 @@ def run_robustness_exp(max_gens, pop_size, archive_size, crossover_rate, mutatio
     train_model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations, error=error_rmse_all,
                             forecasts_path='../../../wind-postproc/out', noise_run=0)
     test_model = model_all_stations()
-    default_forecasts = default_params_forecasts(test_model)
-
-    ref_metrics = get_rmse_for_all_stations(default_forecasts,
-                                            wave_watch_results(path_to_results='../../samples/ww-res/',
-                                                               stations=ALL_STATIONS))
 
     history, archive_history = SPEA2(
         params=SPEA2.Params(max_gens=max_gens, pop_size=pop_size, archive_size=archive_size,
@@ -260,24 +217,23 @@ objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
 #                        mutation_value_rate=[0.05, 0.001, 0.0005]
 
 stations_for_run_set3 = [[1],
-                        [1, 2],
-                        [1, 2, 3],
-                        [1, 2, 3, 4],
-                        [1, 2, 3, 4, 5],
-                        [1, 2, 3, 4, 5, 6],
-                        [4],
-                        [4, 5],
-                        [4, 5, 6],
-                        [4, 5, 6, 7],
-                        [4, 5, 6, 7, 8],
-                        [4, 5, 6, 7, 8, 9],
-                        [1],
-                        [1, 2],
-                        [1, 2, 3],
-                        [1, 2, 3, 7],
-                        [1, 2, 3, 7, 8],
-                        [1, 2, 3, 7, 8, 9]]
-
+                         [1, 2],
+                         [1, 2, 3],
+                         [1, 2, 3, 4],
+                         [1, 2, 3, 4, 5],
+                         [1, 2, 3, 4, 5, 6],
+                         [4],
+                         [4, 5],
+                         [4, 5, 6],
+                         [4, 5, 6, 7],
+                         [4, 5, 6, 7, 8],
+                         [4, 5, 6, 7, 8, 9],
+                         [1],
+                         [1, 2],
+                         [1, 2, 3],
+                         [1, 2, 3, 7],
+                         [1, 2, 3, 7, 8],
+                         [1, 2, 3, 7, 8, 9]]
 
 stations_for_run_set2 = [[1],
                          [1, 2],
@@ -301,17 +257,14 @@ stations_for_run_set = [[1],
                         [8],
                         [9],
                         [1, 4],
-                        [2,5],
-                        [4,8],
+                        [2, 5],
+                        [4, 8],
                         [5, 9],
-                        [1, 2,3],
+                        [1, 2, 3],
                         [1, 4, 9],
-                        [1,2, 4, 7, 9],
-                        [1, 2,3,7,8,9],
-                        [1, 2, 3,4,5,6]]
-
-
-# stations_for_run_set = [[1,2,3,4,5,6]]
+                        [1, 2, 4, 7, 9],
+                        [1, 2, 3, 7, 8, 9],
+                        [1, 2, 3, 4, 5, 6]]
 
 
 def robustness_statistics():
@@ -342,9 +295,10 @@ def robustness_statistics():
             runs_total = len(stations_for_run_set)
             fig_paths = [os.path.join('../..', exptime, str(iteration * runs_total + run)) for run in range(runs_total)]
             all_packed_params = []
-            runs_range=list(range(0,len(stations_for_run_set)))
-            for st_set_id, station, params, fig_path in zip(runs_range,stations_for_run_set, repeat(param_for_run), fig_paths):
-                all_packed_params.append([st_set_id,station, params, fig_path])
+            runs_range = list(range(0, len(stations_for_run_set)))
+            for st_set_id, station, params, fig_path in zip(runs_range, stations_for_run_set, repeat(param_for_run),
+                                                            fig_paths):
+                all_packed_params.append([st_set_id, station, params, fig_path])
 
             with tqdm(total=runs_total) as progress_bar:
                 for _, out in tqdm(enumerate(p.imap(robustness_run, all_packed_params))):
@@ -440,10 +394,10 @@ def prepare_all_fake_models():
                 ww3_obs = \
                     [obs.time_series() for obs in
                      wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
-                model = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations,
-                                  error=err,
-                                  forecasts_path=f'../../../wind-postproc/out',
-                                  noise_run=noise)
+                _ = FakeModel(grid_file=grid, observations=ww3_obs, stations_to_out=stations,
+                              error=err,
+                              forecasts_path=f'../../../wind-postproc/out',
+                              noise_run=noise)
 
 
 def reference_metrics():
@@ -452,15 +406,4 @@ def reference_metrics():
 
 
 if __name__ == '__main__':
-    #print(reference_metrics())
     robustness_statistics()
-    #for iter_id in range(0,10):
-    #    optimize_by_ww3_obs([1], max_gens=80, pop_size=40, archive_size=20, crossover_rate=0.7, mutation_rate=0.7,
-    #                        mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_id, plot_figures=False)
-
-     #for iter_ind in range(0, 30):
-     #   optimize_by_ww3_obs([1, 2,3,4,5,6], max_gens=10, pop_size=10, archive_size=5, crossover_rate=0.7, mutation_rate=0.7,
-     #                       mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
-
-    #print(all_error_metrics(params=SWANParams(drf=1.5997924713924645, cfw=0.030010929248229738, stpm=0.0024975825926832843),
-    #                  models_to_tests=init_models_to_tests()))
