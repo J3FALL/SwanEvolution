@@ -8,9 +8,6 @@ import numpy as np
 from src.evolution.raw_fitness import raw_fitness
 
 
-# random.seed(datetime.now())
-
-
 class SPEA2:
     def __init__(self, params, init_population, objectives, crossover, mutation):
         '''
@@ -53,9 +50,7 @@ class SPEA2:
             self.density = 0
 
         def fitness(self):
-            # print(self.raw_fitness + self.density)
             return self.raw_fitness + self.density
-            # return mean_obj(self)
 
         def weighted_sum(self):
             return sum(list(self.objectives))
@@ -88,7 +83,7 @@ class SPEA2:
             self.fitness()
             self._archive = self.environmental_selection(self._pop, self._archive)
             best = sorted(self._archive, key=lambda p: mean_obj(p))[0]
-            # print("best: ", mean_obj(best))
+
             last_fit = history.last().fitness_value
             if last_fit > mean_obj(best):
                 best_gens = best.genotype
@@ -113,7 +108,6 @@ class SPEA2:
     def fitness(self):
         self.objectives(self._pop)
         union = self._archive + self._pop
-        # self.calculate_dominated(union)
 
         raw_values = raw_fitness(union)
         for idx in range(len(union)):
@@ -121,28 +115,6 @@ class SPEA2:
 
         for p in union:
             p.density = self.calculate_density(p, union)
-
-    def calculate_dominated(self, pop):
-        '''
-        For each individ find all individuals that are better than selected
-        :return:
-        '''
-
-        for p in pop:
-            p.dominators = [selected for selected in pop if selected != p and self.dominates(p, selected)]
-
-    def dominates(self, src, target):
-        for idx in range(len(src.objectives)):
-            if src.objectives[idx] > target.objectives[idx]:
-                return False
-        return True
-
-    def calculate_raw_fitness(self, src, pop):
-        sum = 0
-        for p in pop:
-            if self.dominates(p, src):
-                sum += len(p.dominators)
-        return sum
 
     def calculate_density(self, src, pop):
         '''
@@ -186,7 +158,6 @@ class SPEA2:
             while True:
                 # Truncate the archive population
                 k = int(sqrt(len(env)))
-                # k = 1
                 dens = []
                 for p1 in env:
                     distances_to_p1 = []
@@ -212,7 +183,6 @@ class SPEA2:
         return selected
 
     def binary_tournament(self, pop):
-        # random.seed(datetime.now())
 
         i, j = random.randint(0, len(pop) - 1), random.randint(0, len(pop) - 1)
 
@@ -222,16 +192,12 @@ class SPEA2:
 
     def reproduce(self, selected, pop_size):
         children = []
-        # selected = sorted(selected, key=lambda p: p.fitness())
-        #
-        # best_range = int(0.3 * pop_size)
-        # best_parents = selected[:best_range]
-        # children.extend(best_parents)
+
         for p1 in selected:
             idx = selected.index(p1)
-            if (idx + 1 > len(selected) - 1):
+            if idx + 1 > len(selected) - 1:
                 idx = len(selected) - 1 - 1
-            if (idx == 0): idx = 1
+            if idx == 0: idx = 1
             p2 = selected[idx + 1] if idx % 2 == 0 else selected[idx - 1]
             if idx == len(selected) - 1:
                 p2 = selected[0]

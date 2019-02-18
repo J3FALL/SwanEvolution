@@ -68,8 +68,6 @@ def default_params_forecasts(model):
 
 
 def get_rmse_for_all_stations(forecasts, observations):
-    # assert len(observations) == len(forecasts) == 3
-
     time = np.linspace(1, 253, num=len(forecasts[0].hsig_series))
 
     obs_series = []
@@ -109,7 +107,7 @@ def optimize(train_stations, max_gens, pop_size, archive_size, crossover_rate, m
     save_archive_history(archive_history, f'history-ens-{iter_ind}.csv')
     test_model = model_all_stations()
 
-    if (plot_figures):
+    if plot_figures:
 
         closest_hist = test_model.closest_params(params)
         closest_params_set_hist = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
@@ -149,7 +147,7 @@ def save_archive_history(history, file_name='ens-history.csv'):
                 row_to_write['gen_idx'] = gen_idx
 
                 metrics = test_model.output(params=ind.genotype)
-                for err_idx in range(0,len(metrics)):
+                for err_idx in range(0, len(metrics)):
                     row_to_write[f'err_{err_idx + 1}'] = metrics[err_idx]
 
                 row_to_write['drf'] = ind.genotype.drf
@@ -166,14 +164,9 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
         [obs.time_series() for obs in wave_watch_results(path_to_results='../../samples/ww-res/', stations=stations)]
 
     test_model = model_all_stations()
-    default_forecasts = default_params_forecasts(test_model)
-
-    ref_metrics = get_rmse_for_all_stations(default_forecasts,
-                                            wave_watch_results(path_to_results='../../samples/ww-res/',
-                                                               stations=ALL_STATIONS))
 
     old_path = '../../../wind-postproc/out'
-    train_model = Ensemble(grid=grid, noise_cases=[0, 1, 2, 3, 4, 5, 6],#, 7, 15, 16, 17, 18, 25, 26],
+    train_model = Ensemble(grid=grid, noise_cases=[0, 1, 2, 3, 4, 5, 6],
                            observations=ww3_obs,
                            path_to_forecasts=old_path,
                            stations_to_out=stations, error=error_rmse_all)
@@ -186,9 +179,6 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
         objectives=partial(calculate_objectives_interp, train_model),
         crossover=crossover,
         mutation=mutation).solution(verbose=False)
-
-    exptime2 = str(datetime.datetime.now().time()).replace(":", "-")
-    #save_archive_history(archive_history, f'rob-exp-ens-{exptime2}.csv')
 
     params = history.last().genotype
 
@@ -212,34 +202,9 @@ def run_robustess_exp_ens(max_gens, pop_size, archive_size, crossover_rate, muta
     return history.last()
 
 
-# objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
-#                    'max_gens': 15, 'mutation_p1': 0.1, 'mutation_p2': 0.001,
-#                    'mutation_p3': 0.0001, 'mutation_rate': 0.7, 'pop_size': 20}
-
-
 objective_manual = {'a': 0, 'archive_size_rate': 0.25, 'crossover_rate': 0.7,
                     'max_gens': 60, 'mutation_p1': 0.1, 'mutation_p2': 0.01,
                     'mutation_p3': 0.001, 'mutation_rate': 0.7, 'pop_size': 20}
-
-# stations_for_run_set = [[1,2,3]]
-stations_for_run_set = [[1],
-                        [1, 2],
-                        [1, 2, 3],
-                        [1, 2, 3, 4],
-                        [1, 2, 3, 4, 5],
-                        [1, 2, 3, 4, 5, 6],
-                        [4],
-                        [4, 5],
-                        [4, 5, 6],
-                        [4, 5, 6, 7],
-                        [4, 5, 6, 7, 8],
-                        [4, 5, 6, 7, 8, 9],
-                        [1],
-                        [1, 2],
-                        [1, 2, 3],
-                        [1, 2, 3, 7],
-                        [1, 2, 3, 7, 8],
-                        [1, 2, 3, 7, 8, 9]]
 
 stations_for_run_set2 = [[1],
                          [1, 2],
@@ -263,15 +228,14 @@ stations_for_run_set = [[1],
                         [8],
                         [9],
                         [1, 4],
-                        [2,5],
-                        [4,8],
+                        [2, 5],
+                        [4, 8],
                         [5, 9],
-                        [1, 2,3],
+                        [1, 2, 3],
                         [1, 4, 9],
-                        [1,2, 4, 7, 9],
-                        [1, 2,3,7,8,9],
-                        [1, 2, 3,4,5,6]]
-
+                        [1, 2, 4, 7, 9],
+                        [1, 2, 3, 7, 8, 9],
+                        [1, 2, 3, 4, 5, 6]]
 
 
 def robustness_statistics():
@@ -303,8 +267,9 @@ def robustness_statistics():
             fig_paths = [os.path.join('../..', exptime, str(iteration * runs_total + run)) for run in range(runs_total)]
             all_packed_params = []
 
-            runs_range=list(range(0,len(stations_for_run_set)))
-            for st_set_id, station, params, fig_path in zip(runs_range, stations_for_run_set, repeat(param_for_run), fig_paths):
+            runs_range = list(range(0, len(stations_for_run_set)))
+            for st_set_id, station, params, fig_path in zip(runs_range, stations_for_run_set, repeat(param_for_run),
+                                                            fig_paths):
                 all_packed_params.append([st_set_id, station, params, fig_path])
 
             with tqdm(total=runs_total) as progress_bar:
@@ -340,14 +305,14 @@ def robustness_run(packed_args):
     mutation_value_rate = [param_for_run['mutation_p1'], param_for_run['mutation_p2'],
                            param_for_run['mutation_p3']]
     best = run_robustess_exp_ens(max_gens=param_for_run['max_gens'],
-                                                       pop_size=param_for_run['pop_size'],
-                                                       archive_size=archive_size,
-                                                       crossover_rate=param_for_run['crossover_rate'],
-                                                       mutation_rate=param_for_run['mutation_rate'],
-                                                       mutation_value_rate=mutation_value_rate,
-                                                       stations=stations_for_run,
-                                                       save_figures=True,
-                                                       figure_path=figure_path)
+                                 pop_size=param_for_run['pop_size'],
+                                 archive_size=archive_size,
+                                 crossover_rate=param_for_run['crossover_rate'],
+                                 mutation_rate=param_for_run['mutation_rate'],
+                                 mutation_value_rate=mutation_value_rate,
+                                 stations=stations_for_run,
+                                 save_figures=True,
+                                 figure_path=figure_path)
 
     return st_set_id, best
 
@@ -383,9 +348,6 @@ def all_error_metrics(params, models_to_tests):
     for metric_name in metrics.keys():
         model = models_to_tests[metric_name]
 
-        # closest_hist = model.closest_params(params)
-        # closest_params = SWANParams(drf=closest_hist[0], cfw=closest_hist[1], stpm=closest_hist[2])
-
         out[metric_name] = model.output(params=params)
 
     return out
@@ -393,6 +355,3 @@ def all_error_metrics(params, models_to_tests):
 
 if __name__ == '__main__':
     robustness_statistics()
-    #for iter_ind in range(0, 30):
-    #    optimize([1,2,3,4,5,6], max_gens=10, pop_size=10, archive_size=5, crossover_rate=0.7, mutation_rate=0.7,
-    #             mutation_value_rate=[0.05, 0.001, 0.0005], iter_ind=iter_ind, plot_figures=False)
