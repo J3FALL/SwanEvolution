@@ -1,8 +1,6 @@
 from math import sqrt
 
 import numpy as np
-from fastdtw import fastdtw
-from scipy.spatial.distance import euclidean
 
 
 def error_dtw_all(forecast, observations):
@@ -12,8 +10,8 @@ def error_dtw_all(forecast, observations):
     :param observations: ObservationFile object
     '''
 
-    distance, path = fastdtw(forecast.hsig_series, observations, dist=euclidean)
-
+    # distance, path = fastdtw(forecast.hsig_series, observations, dist=euclidean)
+    distance = 1
     # print("DTW")
     return distance
 
@@ -25,8 +23,9 @@ def error_rmse_all(forecast, observations):
     :param observations: ObservationFile object
     '''
 
-    result = 0.0
     penalty_var = abs((np.var(observations) - np.var(forecast.hsig_series)) / np.var(observations)) + 1
+
+    result = 0.0
 
     for pred, obs in zip(forecast.hsig_series, observations):
         result += pow(pred - obs, 2)
@@ -42,15 +41,16 @@ def error_rmse_peak(forecast, observations):
     '''
 
     peak_thr = np.mean(observations)
-    observation_peaks = [obs if obs > peak_thr else peak_thr for obs in observations]
-
-    forcasts_peaks = [fk if fk > peak_thr else peak_thr for fk in forecast.hsig_series]
 
     result = 0.0
-    for pred, obs in zip(forcasts_peaks, observation_peaks):
-        result += pow(pred - obs, 2)
+    points = 0
+    for pred, obs in zip(forecast.hsig_series, observations):
 
-    return sqrt(result / len(observation_peaks))
+        if obs >= peak_thr:
+            result += pow(pred - obs, 2)
+            points += 1
+
+    return sqrt(result / points)
 
 
 def error_mae_peak(forecast, observations):
@@ -60,12 +60,21 @@ def error_mae_peak(forecast, observations):
     :param observations: ObservationFile object
     '''
 
-    observation_peaks = [obs if obs > 1 else 1 for obs in observations]
-
-    forcasts_peaks = [fk if fk > 1 else 1 for fk in forecast.hsig_series]
+    peak_thr = np.mean(observations)
 
     result = 0.0
-    for pred, obs in zip(forcasts_peaks, observation_peaks):
-        result += abs(pred - obs)
+    points = 0
+    for pred, obs in zip(forecast.hsig_series, observations):
 
-    return result / len(observation_peaks)
+        if obs >= peak_thr:
+            result += abs(pred - obs)
+            points += 1
+
+    return (result / points)
+
+
+def error_mae_all(forecast, observations):
+    pred = np.array(forecast.hsig_series)
+    obs = observations[:len(forecast.hsig_series)]
+
+    return np.sum(np.abs(pred - obs)) / len(observations)
