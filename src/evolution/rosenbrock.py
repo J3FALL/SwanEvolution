@@ -58,7 +58,7 @@ def rosenbrook_optimize_test():
         init_population=initial_pop_rosenbrook,
         objectives=calculate_objectives_rosenbrock,
         crossover=crossover,
-        mutation=mutation).solution(verbose=False)
+        mutation=mutation).solution(verbose=True, print_fun=print_best_rosenbrook)
 
 
 if __name__ == '__main__':
